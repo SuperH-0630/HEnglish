@@ -142,6 +142,3 @@ class Word:
         for i in self.comment:
             ret += f'note: {self.comment[i]};\n'
         return ret
-
-
-word_dict = WordDict()

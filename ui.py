@@ -1,7 +1,13 @@
 import tktool
 import tkinter
+import tkinter.ttk as ttk
+import tkinter.filedialog as fd
+import tkinter.messagebox as msg
 from typing import List, Tuple, Callable, Optional
 import abc
+
+import db
+import word
 
 
 class HEnglishTkinter(tktool.TkEventMain, metaclass=abc.ABCMeta):
@@ -25,6 +31,7 @@ class HEnglishTkinter(tktool.TkEventMain, metaclass=abc.ABCMeta):
 
         if top:
             self._window = tkinter.Toplevel(top._window)
+            top._window.lift()
         else:
             self._window = tkinter.Tk()
 
@@ -71,6 +78,8 @@ class HEnglishTkinter(tktool.TkEventMain, metaclass=abc.ABCMeta):
 class HEnglish(HEnglishTkinter):
     def __init__(self):
         super(HEnglish, self).__init__("H-English")
+        self.db = db.WordDatabase()
+        self.wd = self.db.wd
 
     def _create_windows(self):
         self._title_label = tkinter.Label(self._window)
@@ -142,6 +151,36 @@ class HEnglish(HEnglishTkinter):
 
 
 class Import(HEnglishTkinter):
+    class ImportEvent(tktool.TkEventBase, metaclass=abc.ABCMeta):
+        def __init__(self, imp: "Import"):
+            super().__init__()
+            self.imp = imp
+            self.thread = None
+
+        def get_title(self) -> str:
+            return "Import"
+
+    class ImportFromText(ImportEvent):
+        def func(self, file: str):
+            self.file = file
+            return self.imp._father.db.update_from_txt(file)
+
+        def __init__(self, imp: "Import"):
+            super().__init__(imp)
+            self.file = ""
+
+        def start(self, file: str):
+            self.thread = tktool.TkThreading(self.func, file)
+            return self
+
+        def is_end(self) -> bool:
+            return not self.thread.is_alive()
+
+        def done_after_event(self):
+            res = self.thread.wait_event()
+            if res:
+                msg.showinfo("操作成功", f"成功从{self.file}中读取单词")
+
     def __init__(self, father: HEnglish, father_windows: tkinter.Tk):
         super(Import, self).__init__("Import", father, size=(1 / 3, 1 / 3))
         self._father = father
@@ -149,10 +188,12 @@ class Import(HEnglishTkinter):
 
     def _create_windows(self):
         self._title_label = tkinter.Label(self._window)
+        self._loading_pro = ttk.Progressbar(self._window)
         self._control_btn = [tkinter.Button(self._window) for _ in range(6)]
 
     def _set_windows(self):
         self.__conf_title()
+        self.__conf_loader()
         self.__conf_control_btn()
 
     def __conf_title(self):
@@ -166,6 +207,11 @@ class Import(HEnglishTkinter):
         self._title_label['anchor'] = 'c'
         self._title_label.place(relx=0.0, rely=0.03, relwidth=1.0, relheight=0.13)
         self._title = tkinter.Label()
+
+    def __conf_loader(self):
+        self._loading_pro['mode'] = 'indeterminate'  # 来回显示
+        self._loading_pro['orient'] = 'horizontal'  # 横向进度条
+        self._loading_pro['maximum'] = 100
 
     def __conf_control_btn(self):
         if self._win_width >= self._win_height:
@@ -184,7 +230,7 @@ class Import(HEnglishTkinter):
         for i in zip(self._control_btn,
                      ["From Text", "From CSV", "From Excel", "From Json"],
                      ["#1E90FF", "#FF69B4", "#C71585", "#00FF7F"],
-                     [None, None, None, None]):
+                     [self.import_from_text, None, None, None]):
             i[0]['font'] = font
             i[0]['fg'] = "#000000"
             i[0]['bg'] = i[2]
@@ -196,11 +242,18 @@ class Import(HEnglishTkinter):
             i[0]['text'] = i[1]
             i[0]['command'] = i[3]
 
-    def show_loading(self, title: str):  # 有子线程时显示加载
-        ...
+    def import_from_text(self):
+        file = fd.askopenfilename(filetypes=[("Text", ".txt"), ("All", "*")])
+        self.push_event(self.ImportFromText(self).start(file))
 
-    def stop_loading(self):  # 子线程运行完成后关闭加载
-        ...
+    def show_loading(self, title: str):
+        self._loading_pro['value'] = 0
+        self._loading_pro.place(relx=0.10, rely=0.17, relwidth=0.80, relheight=0.05)
+        self._loading_pro.start(50)
+
+    def stop_loading(self):
+        self._loading_pro.place_forget()
+        self._loading_pro.stop()
 
 
 if __name__ == '__main__':

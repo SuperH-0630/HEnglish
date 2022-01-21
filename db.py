@@ -12,12 +12,7 @@ import re
 
 class DataBase:
     def __init__(self, name):
-        self._db = sqlite3.connect(f"{name}.db")
-        self._cursor = self._db.cursor()
-        self._lock = threading.RLock()
-
-    def get_cursor(self) -> sqlite3.Cursor:
-        return self._cursor
+        self._db_name = f"{name}.db"
 
     def search(self, columns: List[str], table: str,
                where: Union[str, List[str]] = None,
@@ -93,39 +88,32 @@ class DataBase:
         kw_str = ", ".join(kw_list)
         return self.done(f"UPDATE {table} SET {kw_str} WHERE {where};", not_commit=not_commit)
 
-    def __search(self, sql) -> Union[None, sqlite3.Cursor]:
+    def __search(self, sql) -> Union[None, List]:
         try:
-            self._lock.acquire()  # 上锁
-            self._cursor.execute(sql)
+            sqlite = sqlite3.connect(self._db_name)
+            cur = sqlite.cursor()
+            cur.execute(sql)
+            ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
             print(f"sql='{sql}'")
             return None
-        finally:
-            self._lock.release()  # 释放锁
-        return self._cursor
+        return ret
 
-    def done(self, sql, not_commit: bool = False) -> Union[None, sqlite3.Cursor]:
+    def done(self, sql, not_commit: bool = False) -> Union[None, "Tuple[sqlite3, sqlite3.Cursor]"]:
+        sqlite = sqlite3.connect(self._db_name)
         try:
-            self._lock.acquire()
-            self._cursor.execute(sql)
+            cur = sqlite.cursor()
+            cur.execute(sql)
         except sqlite3.Error:
-            self._db.rollback()
+            sqlite.rollback()
             print(f"sql={sql}")
             traceback.print_exc()
             return None
         finally:
             if not not_commit:
-                self._db.commit()
-            self._lock.release()
-        return self._cursor
-
-    def commit(self):
-        try:
-            self._lock.acquire()
-            self._db.commit()
-        finally:
-            self._lock.release()
+                sqlite.commit()
+        return sqlite, cur
 
 
 class WordDatabase(DataBase):
@@ -147,12 +135,11 @@ class WordDatabase(DataBase):
         self.wd = word.WordDict()
 
     def find_word(self, q: str) -> Optional[word.Word]:
-        cur = self.search(columns=["id", "word", "part", "english", "chinese", "eg"],
+        res = self.search(columns=["id", "word", "part", "english", "chinese", "eg"],
                           table="Word",
                           where=f"LOWER(word)='{q.lower()}'")
-        res = []
-        if cur is not None:
-            res = cur.fetchall()
+        if res is None:
+            res = []
 
         if len(res) <= 0:
             r = self.wd.get_requests(q)
@@ -165,8 +152,8 @@ class WordDatabase(DataBase):
                     ret = w
                 name = w.name
                 name_lower = name.lower().replace("'", "''")
-                cur = self.search(columns=["word"], table="Word", where=f"LOWER(word)='{name_lower}'")
-                if cur is not None and len(cur.fetchall()) > 0:
+                res = self.search(columns=["word"], table="Word", where=f"LOWER(word)='{name_lower}'")
+                if res is not None and len(res) > 0:
                     continue
                 for c in w.comment:
                     comment = r.res[i].comment[c]
@@ -251,12 +238,11 @@ class WordDatabase(DataBase):
         return True, response
 
     def export_as_txt(self, file: str):
-        cur = self.search(columns=["word"],
+        res = self.search(columns=["word"],
                           table="Word",
                           order_by=[('box', 'DESC')])
-        if cur is None:
+        if res is None:
             return False
-        res = cur.fetchall()
         export = []
         with open(file + '.txt', encoding='utf-8', mode="w") as f:
             for i in res:
@@ -266,16 +252,15 @@ class WordDatabase(DataBase):
                 export.append(i[0])
         return True
 
-    def export_as_table(self, file: str, t: str = 'excel'):
+    def export_as_table(self, file: str, t: str = 'excel', max_eg: int = 3):
         if t == 'txt':
             return self.export_as_txt(file)
 
-        cur = self.search(columns=["box", "word", "part", "english", "chinese", "eg"],
+        res = self.search(columns=["box", "word", "part", "english", "chinese", "eg"],
                           table="Word",
                           order_by=[('box', 'DESC')])
-        if cur is None:
+        if res is None:
             return False
-        res = cur.fetchall()
         df = pandas.DataFrame(columns=["Box", "Word", "Part", "English", "Chinese", "Eg"])
         export = []
         for i in res:
@@ -284,7 +269,12 @@ class WordDatabase(DataBase):
             export.append(i[1])
             eg = i[5].split("@@")
             eg_str = ""
+            count_eg = 0
             for e in eg:
+                count_eg += 1
+                if max_eg != -1 and count_eg > max_eg:
+                    break
+
                 ec = e.split("##")
                 if len(ec) == 2:
                     eng, chi = ec
@@ -308,3 +298,8 @@ class WordDatabase(DataBase):
             df.to_json(file + ".json", encoding='utf-8')
         else:
             return False
+
+
+if __name__ == '__main__':
+    db = WordDatabase()
+    db.export_as_table("resource/English-Word")
