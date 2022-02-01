@@ -76,6 +76,11 @@ class HEnglishTkinter(tktool.TkEventMain, metaclass=abc.ABCMeta):
 
 
 class HEnglish(HEnglishTkinter):
+    about_info = """H-English 是一个使用剑桥词典的英语学习小工具。
+使用Python+SQLite作为实现，爬取剑桥词典的英语单词。
+本项目为开源项目，供免费学习使用。
+产生任何法律问题本人概不负责。"""
+
     def __init__(self):
         super(HEnglish, self).__init__("H-English")
         self.db = db.WordDatabase()
@@ -128,7 +133,7 @@ class HEnglish(HEnglishTkinter):
         for i in zip(self._control_btn,
                      ["Word Test", "Dictionary", "Export", "Import", "Delete", "About"],
                      ["#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC"],
-                     [None, None, None, self.import_word, None, None]):
+                     [None, None, None, self.import_word, None, self.about]):
             i[0]['font'] = font
             i[0]['fg'] = "#000000"
             i[0]['bg'] = i[2]
@@ -142,6 +147,9 @@ class HEnglish(HEnglishTkinter):
 
     def import_word(self):
         Import(self, self._window)
+
+    def about(self):
+        msg.showinfo("关于", self.about_info)
 
     def show_loading(self, title: str):  # 有子线程时显示加载
         ...
