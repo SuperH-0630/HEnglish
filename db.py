@@ -217,23 +217,25 @@ class WordDatabase(DataBase):
         if t == 'txt':
             return self.update_from_txt(file)
         elif t == 'csv':
-            df = pd.read_csv(file, encoding='utf-8')
+            df = pd.read_csv(file, encoding='utf-8', header=None)
         elif t == 'excel':
-            df = pd.read_excel(file, encoding='utf-8')
+            df = pd.read_excel(file, encoding='utf-8', header=None)
         elif t == 'json':
             df = pd.read_json(file, encoding='utf-8')
         else:
             return False, []
 
+        print(df)
         response = self.UpdateResponse()
         for i in df.itertuples():
+            print(i[1])  # i[0]是序号
             try:
-                if self.find_word(str(i[0])) is None:
-                    response.add_error(str(i[0]))
+                if self.find_word(str(i[1])) is None:
+                    response.add_error(str(i[1]))
                 else:
                     response.add_success()
             except:
-                response.add_error(str(i[0]))
+                response.add_error(str(i[1]))
                 traceback.print_exc()
         return True, response
 

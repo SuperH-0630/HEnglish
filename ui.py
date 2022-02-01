@@ -127,7 +127,7 @@ class HEnglish(HEnglishTkinter):
 
         for i in zip(self._control_btn,
                      ["Word Test", "Dictionary", "Export", "Import", "Delete", "About"],
-                     ["#1E90FF", "#FF69B4", "#FF4500", "#4169E1", "#00FF7F", "#C71585"],
+                     ["#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC"],
                      [None, None, None, self.import_word, None, None]):
             i[0]['font'] = font
             i[0]['fg'] = "#000000"
@@ -149,6 +149,16 @@ class HEnglish(HEnglishTkinter):
     def stop_loading(self):  # 子线程运行完成后关闭加载
         ...
 
+    def disable(self):
+        self._window.state('icon')
+        for i in self._control_btn:
+            i['state'] = 'disable'
+
+    def enable(self):
+        self._window.state('normal')
+        for i in self._control_btn:
+            i['state'] = 'normal'
+
 
 class Import(HEnglishTkinter):
     class ImportEvent(tktool.TkEventBase, metaclass=abc.ABCMeta):
@@ -156,35 +166,50 @@ class Import(HEnglishTkinter):
             super().__init__()
             self.imp = imp
             self.thread = None
+            self.file = ""
+
+        @abc.abstractmethod
+        def func(self, *args):
+            ...
 
         def get_title(self) -> str:
             return "Import"
 
-    class ImportFromText(ImportEvent):
-        def func(self, file: str):
-            self.file = file
-            return self.imp._father.db.update_from_txt(file)
-
-        def __init__(self, imp: "Import"):
-            super().__init__(imp)
-            self.file = ""
-
-        def start(self, file: str):
-            self.thread = tktool.TkThreading(self.func, file)
+        def start(self, *args):
+            self.thread = tktool.TkThreading(self.func, *args)
             return self
-
-        def is_end(self) -> bool:
-            return not self.thread.is_alive()
 
         def done_after_event(self):
             res = self.thread.wait_event()
             if res:
                 msg.showinfo("操作成功", f"成功从{self.file}中读取单词")
 
+    class ImportFromText(ImportEvent):
+        def __init__(self, imp: "Import"):
+            super().__init__(imp)
+
+        def func(self, file: str):
+            self.file = file
+            return self.imp._father.db.update_from_txt(file)
+
+    class ImportFromTable(ImportEvent):
+        def __init__(self, imp: "Import"):
+            super().__init__(imp)
+
+        def func(self, file: str, t: str):
+            self.file = file
+            return self.imp._father.db.update_from_table(file, t)
+
     def __init__(self, father: HEnglish, father_windows: tkinter.Tk):
         super(Import, self).__init__("Import", father, size=(1 / 3, 1 / 3))
         self._father = father
         self._father_windows = father_windows
+        self._father.disable()
+        self._window.protocol("WM_DELETE_WINDOW", self.close)
+
+    def close(self):
+        self._window.destroy()
+        self._father.enable()
 
     def _create_windows(self):
         self._title_label = tkinter.Label(self._window)
@@ -229,8 +254,8 @@ class Import(HEnglishTkinter):
 
         for i in zip(self._control_btn,
                      ["From Text", "From CSV", "From Excel", "From Json"],
-                     ["#1E90FF", "#FF69B4", "#C71585", "#00FF7F"],
-                     [self.import_from_text, None, None, None]):
+                     ["#DCDCDC", "#DCDCDC", "#DCDCDC", "#DCDCDC"],
+                     [self.import_from_text, self.import_from_csv, self.import_from_excel, self.import_from_json]):
             i[0]['font'] = font
             i[0]['fg'] = "#000000"
             i[0]['bg'] = i[2]
@@ -244,7 +269,23 @@ class Import(HEnglishTkinter):
 
     def import_from_text(self):
         file = fd.askopenfilename(filetypes=[("Text", ".txt"), ("All", "*")])
-        self.push_event(self.ImportFromText(self).start(file))
+        if file != "":
+            self.push_event(self.ImportFromText(self).start(file))
+
+    def import_from_csv(self):
+        file = fd.askopenfilename(filetypes=[("CSV", ".csv"), ("All", "*")])
+        if file != "":
+            self.push_event(self.ImportFromTable(self).start(file, "csv"))
+
+    def import_from_excel(self):
+        file = fd.askopenfilename(filetypes=[("Excel", ".xlsx"), ("All", "*")])
+        if file != "":
+            self.push_event(self.ImportFromTable(self).start(file, "excel"))
+
+    def import_from_json(self):
+        file = fd.askopenfilename(filetypes=[("Json", ".json"), ("All", "*")])
+        if file != "":
+            self.push_event(self.ImportFromTable(self).start(file, "json"))
 
     def show_loading(self, title: str):
         self._loading_pro['value'] = 0
