@@ -1,15 +1,20 @@
 import sqlite3
 from typing import Optional, Union, List, Tuple, Dict
 import traceback
-
+import logging
 import pandas
 import word
 import re
+import os
 
 
 class DataBase:
-    def __init__(self, name):
-        self._db_name = f"{name}.db"
+    __logger = logging.getLogger("database")
+    __logger.propagate = False
+
+    def __init__(self, name, path: str = ""):
+        self._db_name = os.path.join(path, f"{name}.db")
+        self.__logger.info(f"Mark {self._db_name}")
 
     def search(self, columns: List[str], table: str,
                where: Union[str, List[str]] = None,
@@ -92,8 +97,7 @@ class DataBase:
             cur.execute(sql)
             ret = cur.fetchall()
         except sqlite3.Error:
-            traceback.print_exc()
-            print(f"sql='{sql}'")
+            self.__logger.error(f"Sqlite({self._db_name}) SQL {sql} error", exc_info=True)
             return None
         return ret
 
@@ -104,8 +108,7 @@ class DataBase:
             cur.execute(sql)
         except sqlite3.Error:
             sqlite.rollback()
-            print(f"sql={sql}")
-            traceback.print_exc()
+            self.__logger.error(f"Sqlite({self._db_name}) SQL {sql} error", exc_info=True)
             return None
         finally:
             if not not_commit:
@@ -115,6 +118,7 @@ class DataBase:
 
 class WordDatabase(DataBase):
     word_pattern = re.compile("([a-zA-Z\']+)")  # 匹配英语单词
+    __logger = logging.getLogger("database.dict")
 
     def __init__(self, dict_name: str = "global"):
         super(WordDatabase, self).__init__(dict_name + "-dict")
@@ -154,6 +158,7 @@ class WordDatabase(DataBase):
                 self.insert(table='Word',
                             columns=['word', 'part', 'english', 'chinese', 'eg'],
                             values=f"'{name_lower}', '{part}', '{english}', '{chinese}', '{eg} '")
+                self.__logger.info(f"Add word name: {name_lower} part: {part}")
         return ret
 
     @staticmethod
@@ -174,6 +179,7 @@ class WordDatabase(DataBase):
             res = []
         if len(res) <= 0:
             return self.__add_word(q)
+        self.__logger.debug(f"Find word (not add) {q}")
         return self.__make_word(q, res)
 
     class UpdateResponse:
@@ -198,12 +204,14 @@ class WordDatabase(DataBase):
         for w in word_list:
             try:
                 if self.find_word(w) is None:
+                    self.__logger.debug(f"update word {w} fail")
                     response.add_error(w)
                 else:
+                    self.__logger.debug(f"update word {w} success")
                     response.add_success()
             except Exception as e:
                 response.add_error(w)
-                traceback.print_exc()
+                self.__logger.debug(f"update word {w} fail", exc_info=True)
         return True, response
 
     @staticmethod
@@ -248,6 +256,7 @@ class WordDatabase(DataBase):
                             "English": str(i[3]),
                             "Chinese": str(i[4]),
                             "Eg": eg_str}, ignore_index=True)
+            self.__logger.debug(f"export word {i[1]}")
         return df
 
     def delete_txt(self, line: str):
@@ -256,9 +265,13 @@ class WordDatabase(DataBase):
         for w in word_list:
             cur = self.delete(table="Word", where=f"LOWER(word)='{w.lower()}'")
             if cur[1].rowcount != -1:
+                self.__logger.debug(f"delete word {w} success")
                 count += 1
+            else:
+                self.__logger.debug(f"delete word {w} fail")
         return count
 
     def delete_all(self):
+        self.__logger.debug(f"delete all word")
         cur = self.delete(table="Word")
         return cur[1].rowcount

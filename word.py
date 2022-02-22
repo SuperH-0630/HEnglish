@@ -5,6 +5,7 @@
 使用bs4解析网页
 """
 
+import logging
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional, Dict
@@ -13,6 +14,8 @@ from typing import Optional, Dict
 class WordDict:
     __data_set_search = "english-chinese-simplified"
     __url = f"https://dictionary.cambridge.org/zhs/%E6%90%9C%E7%B4%A2/direct/?datasetsearch={__data_set_search}"
+    __logger = logging.getLogger("dict")
+    __logger.propagate = False
 
     def __init__(self, user_agent: Optional[str] = None, proxies: Optional[dict] = None):
         if user_agent is None:
@@ -36,26 +39,33 @@ class WordDict:
                                 params={"q": q},
                                 headers=self.headers,
                                 proxies=self.proxies)
+        self.__logger.info(f"Get requests params: {q} url: {response.url} status: {response.status_code}")
         return Response(response)
 
 
 class Response:
+    __logger = logging.getLogger("dict.response")
+    __logger.propagate = False
+
     def __init__(self, response: requests.Response):
         self._res = response
         self._soup = None
         if self._res.status_code != 200:
+            self.__logger.debug(f"Response bad status : {self._res.status_code}")
             return
 
         self._soup = BeautifulSoup(self._res.text, "html.parser")
         self.di_body = self._soup.find(name="div", attrs={"class": "di-body"})
         if self.di_body is None:
             self._soup = None
+            self.__logger.debug(f"Response bad syntax url: {self._res.url}")
             return
 
         self.entry = [(i, 1) for i in self.di_body.findAll(name="div", attrs={"class": "pr entry-body__el"})]
         self.entry += [(i, 2) for i in self.di_body.findAll(name="div", attrs={"class": "pv-block"})]
         if len(self.entry) == 0:
             self._soup = None
+            self.__logger.debug(f"Response bad syntax url: {self._res.url}")
             return
 
         self.res: Dict[str: Word] = {}
@@ -109,6 +119,7 @@ class Response:
             word.add_comment(comment)
         if len(self.res) == 0:
             self._soup = None
+            self.__logger.debug(f"Response bad word: {self._res.url}")
 
     @property
     def is_find(self):
@@ -116,6 +127,8 @@ class Response:
 
 
 class Word:
+    __logger.propagate = False
+
     class Comment:
         def __init__(self, part: str, english: str, chinese: str):
             self.part = part   # 词性
