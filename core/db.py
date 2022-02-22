@@ -1,6 +1,5 @@
 import sqlite3
 from typing import Optional, Union, List, Tuple, Dict
-import traceback
 import logging
 import pandas
 import word
