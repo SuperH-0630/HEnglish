@@ -53,6 +53,12 @@
                                 {% endfor %}
                             </ul>
                         {% endfor %}
+                        <div class="row justify-content-center">
+                            <a class="btn btn-info mr-2"> Right </a>
+                            <a class="btn btn-dark mr-2" href="{{ url_for("test.question") }}"> Next word </a>
+                            <a class="btn btn-danger mr-2"> Delete word </a>
+                            <a class="btn btn-info"> Wrong </a>
+                        </div>
                     </div>
                 </div>
             </div>
