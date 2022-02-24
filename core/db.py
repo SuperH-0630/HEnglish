@@ -286,17 +286,20 @@ class WordDatabase(DataBase):
         return cur[1].rowcount
 
     def right_word(self, w: str):
-        res = self.search(columns=["MIN(box)"], table="Word", where=f"word='{w}'")
+        name_lower = w.lower().replace("'", "''")
+        res = self.search(columns=["MIN(box)"], table="Word", where=f"LOWER(word)='{name_lower}'")
         if len(res) == 0:
             return False
         box = res[0][0]
         if box != 5:
             box += 1
-            self.update(table="Word", kw={"box": f"{box}"}, where=f"word='{w}'")
+            name_lower = w.lower().replace("'", "''")
+            self.update(table="Word", kw={"box": f"{box}"}, where=f"LOWED(word)='{name_lower}'")
         return True
 
     def wrong_word(self, w: str):
-        self.update(table="Word", kw={"box": "1"}, where=f"word='{w}'")
+        name_lower = w.lower().replace("'", "''")
+        self.update(table="Word", kw={"box": "1"}, where=f"LOWER(word)='{name_lower}'")
         return True
 
     def rand_word(self):
@@ -306,9 +309,9 @@ class WordDatabase(DataBase):
         elif r < 9:
             box = 1  # 4
         elif r < 12:
-            box = 4  # 3
+            box = 2  # 3
         elif r < 14:
-            box = 5  # 2
+            box = 3  # 2
         else:
             box = 4  # 1
         # box 的概率比分别为：5:4:3:2:1
@@ -316,6 +319,7 @@ class WordDatabase(DataBase):
         count = 0
         while count == 0:
             if box == 5:
+                print()
                 return None
             box += 1
             count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box<={box}")[0][0]
