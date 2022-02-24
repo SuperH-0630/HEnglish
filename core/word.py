@@ -136,7 +136,7 @@ class Word:
 
         def add_eg(self, eg: str):
             eg = eg.strip()
-            if eg == "##":
+            if eg == "##" or len(eg) == 0:
                 return
             self.eg.append(eg)
 
