@@ -1,6 +1,6 @@
 from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response
 from flask_login import current_user, login_required
-from .user import UserWordDataBase
+from app.user import UserWordDataBase
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadData
 

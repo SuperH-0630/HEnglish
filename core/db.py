@@ -2,7 +2,7 @@ import sqlite3
 from typing import Optional, Union, List, Tuple, Dict
 import logging
 import pandas
-from . import word
+from core import word
 import re
 import os
 import random

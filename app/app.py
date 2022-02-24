@@ -2,9 +2,9 @@ from flask import Flask
 from flask.logging import default_handler
 from flask_login import LoginManager
 import configure
-from . import home
-from . import test
-from . import user
+from app import home
+from app import test
+from app import user
 import logging.handlers
 import logging
 import os
