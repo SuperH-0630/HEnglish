@@ -18,7 +18,8 @@ class UserWordDataBase(WordDatabase, UserMixin):
                     id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 记录ID
                     passwd TEXT NOT NULL  -- 密码hash
                 )''')
-        self.insert(table="User", columns=["passwd"], values=f"'{generate_password_hash('88888888')}'")  # 默认密码
+        if self.search(columns=["COUNT(ID)"], table="User")[0][0] == 0:
+            self.insert(table="User", columns=["passwd"], values=f"'{generate_password_hash('88888888')}'")  # 默认密码
         self.user = user
 
     def get_id(self):
@@ -31,7 +32,7 @@ class UserWordDataBase(WordDatabase, UserMixin):
         return check_password_hash(res[0][0], passwd)
 
     def set_passwd(self, passwd: str, record_id: int = 1):
-        self.update(table="User", kw={"passwd": f"'{generate_password_hash(passwd)}'"}, where=f"id = {record_id}")
+        self.update(table="User", kw={"passwd": f"'{generate_password_hash(passwd)}'"}, where=f"id={record_id}")
 
     def delete_user(self):
         self.delete_self()
