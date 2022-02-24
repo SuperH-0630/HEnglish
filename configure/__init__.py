@@ -11,6 +11,7 @@ conf = {
     "LOG_HOME": f"{os.path.join(root, 'var', 'log')}",
     "LOG_STDERR": True,
     "LOG_LEVEL": "DEBUG",
+    "SERVER_NAME": "127.0.0.1:5000",
 }
 
 
