@@ -127,8 +127,6 @@ class Response:
 
 
 class Word:
-    __logger.propagate = False
-
     class Comment:
         def __init__(self, part: str, english: str, chinese: str):
             self.part = part   # 词性
@@ -137,6 +135,9 @@ class Word:
             self.eg = []
 
         def add_eg(self, eg: str):
+            eg = eg.strip()
+            if eg == "##":
+                return
             self.eg.append(eg)
 
         def __str__(self):

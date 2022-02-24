@@ -2,18 +2,26 @@ import sqlite3
 from typing import Optional, Union, List, Tuple, Dict
 import logging
 import pandas
-import word
+from . import word
 import re
 import os
+import random
+import configure
 
 
 class DataBase:
-    __logger = logging.getLogger("database")
-    __logger.propagate = False
+    __logger = logging.getLogger("main.database")
+    __logger.setLevel({"DEBUG": logging.DEBUG,
+                       "INFO": logging.INFO,
+                       "WARNING": logging.WARNING,
+                       "ERROR": logging.ERROR}.get(configure.conf["LOG_LEVEL"], logging.INFO))
 
     def __init__(self, name, path: str = ""):
         self._db_name = os.path.join(path, f"{name}.db")
         self.__logger.info(f"Mark {self._db_name}")
+
+    def delete_self(self):
+        os.remove(self._db_name)
 
     def search(self, columns: List[str], table: str,
                where: Union[str, List[str]] = None,
@@ -117,10 +125,10 @@ class DataBase:
 
 class WordDatabase(DataBase):
     word_pattern = re.compile("([a-zA-Z\']+)")  # 匹配英语单词
-    __logger = logging.getLogger("database.dict")
+    __logger = logging.getLogger("main.database.dict")
 
-    def __init__(self, dict_name: str = "global"):
-        super(WordDatabase, self).__init__(dict_name + "-dict")
+    def __init__(self, dict_name, path: str = ""):
+        super(WordDatabase, self).__init__(dict_name, path)
         self.dict_name = dict_name
         self.done(f'''
         CREATE TABLE IF NOT EXISTS Word (
@@ -274,3 +282,27 @@ class WordDatabase(DataBase):
         self.__logger.debug(f"delete all word")
         cur = self.delete(table="Word")
         return cur[1].rowcount
+
+    def rand_word(self):
+        r = random.randint(0, 16)
+        if r < 5:
+            box = 2
+        elif r < 9:
+            box = 3
+        elif r < 12:
+            box = 4
+        elif r < 14:
+            box = 5
+        else:
+            box = 6
+        # box 的概率比分别为：5:4:3:2:1
+
+        count = 0
+        while count == 0:
+            if box == 1:
+                return None
+            box -= 1
+            count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box={box}")[0][0]
+        get = self.search(columns=["word"], table="Word", limit=1, offset=random.randint(0, count))[0][0]
+        self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
+        return self.find_word(get)

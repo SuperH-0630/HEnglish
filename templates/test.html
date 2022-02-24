@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <article class="container mt-2 mb--2">
+        <p class="col-8 offset-2 text-center" > {{ about }} </p>
+        <section class="mt-2 text-center">
+            <ul id="test" class="nav nav-tabs justify-content-center mb-2">
+                <li class="active nav-item"> <a href="#question" data-toggle="tab" class="nav-link"> question </a> </li>
+                <li class="nav-item"> <a href="#info" data-toggle="tab" class="nav-link"> info </a> </li>
+                <li class="nav-item"> <a href="#answer" data-toggle="tab" class="nav-link"> answer </a> </li>
+            </ul>
+
+            <div id="testContent" class="tab-content">
+                <div class="tab-pane fade" id="question">
+                    <p class="text-center h2"> <u> {{ word.name }} </u> </p>
+                </div>
+                <div class="tab-pane fade" id="info">
+                    <div class="col-12 col-lg-6 offset-lg-3">
+                        {% for w in word.comment %}
+                            <h6 class="text-left">
+                                {{ word.comment[w].part }}
+                            </h6>
+
+                            <ul class="text-left">
+                                {% for e in word.comment[w].eg %}
+                                    <li> <p> {{ e.split('##')[0] }} </p> </li>
+                                {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="answer">
+                    <div class="col-12 col-lg-6 offset-lg-3">
+                        {% for w in word.comment %}
+                            <h5 class="text-left">
+                                {{ word.comment[w].chinese }}
+                            </h5>
+
+                            <h6 class="text-left">
+                                {{ word.comment[w].english }}
+                            </h6>
+
+                            <h6 class="text-left">
+                                ({{ word.comment[w].part }})
+                            </h6>
+
+                            <ul class="text-left">
+                                {% for e in word.comment[w].eg %}
+                                    <li>
+                                        <p> {{ e.split('##')[0] }} </p>
+                                        <p> {{ e.split('##')[1] }} </p>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </article>
+
+{% endblock %}
+
+{% block javascript %}
+    {{ super() }}
+    <script>
+        $('#test .active a').tab('show');  // 显示第一个 tab
+    </script>
+{% endblock %}
