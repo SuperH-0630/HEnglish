@@ -4,6 +4,7 @@ import os
 from configure import conf
 from flask_login import UserMixin, AnonymousUserMixin
 import shutil
+from typing import Optional
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -63,7 +64,7 @@ def create_user(template: str, name: str, passwd: str):
     return 1, user
 
 
-def load_user(name: str, passwd: str | None):
+def load_user(name: str, passwd: Optional[str]):
     if not os.path.exists(os.path.join(conf["DB_PATH"], f"{name}.db")):
         return None
     user = UserWordDataBase(name, conf["DB_PATH"])
