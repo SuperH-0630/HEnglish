@@ -5,9 +5,10 @@
         <p class="col-8 offset-2 text-center" > {{ about }} </p>
         <section class="mt-2 text-center">
             <ul id="test" class="nav nav-tabs justify-content-center mb-2">
-                <li class="active nav-item"> <a href="#question" data-toggle="tab" class="nav-link"> question </a> </li>
-                <li class="nav-item"> <a href="#info" data-toggle="tab" class="nav-link"> info </a> </li>
-                <li class="nav-item"> <a href="#answer" data-toggle="tab" class="nav-link"> answer </a> </li>
+                <li class="active nav-item"> <a href="#question" data-toggle="tab" class="nav-link"> Question </a> </li>
+                <li class="nav-item"> <a href="#info" data-toggle="tab" class="nav-link"> Info </a> </li>
+                <li class="nav-item"> <a href="#answer" data-toggle="tab" class="nav-link"> Answer </a> </li>
+                <li class="nav-item"> <a href="#user" data-toggle="tab" class="nav-link"> User </a> </li>
             </ul>
 
             <div id="testContent" class="tab-content">
@@ -53,13 +54,36 @@
                                 {% endfor %}
                             </ul>
                         {% endfor %}
-                        <div class="row justify-content-center">
-                            <a class="btn btn-info mr-2"> Right </a>
+                        <div class="row justify-content-center mb-2">
+
+                            <div id="DeleteModal" class="modal fade" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title"> Do you sure delete this word？ </h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p> Do you sure delete '{{ word.name }}' ？ </p>
+                                            <p> After doing this, you will never see this word again. </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <a class="btn btn-danger" href="{{ url_for("test.delete", word=word.name) }}" > Sure </a>
+                                            <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a class="btn btn-info mr-2" href="{{ url_for("test.right", word_id=word_id) }}"> Right </a>
                             <a class="btn btn-dark mr-2" href="{{ url_for("test.question") }}"> Next word </a>
-                            <a class="btn btn-danger mr-2"> Delete word </a>
-                            <a class="btn btn-info"> Wrong </a>
+                            <a class="btn btn-light mr-2" href="{{ url_for("test.download", word=word.name) }}"> Download word </a>
+                            <a class="btn btn-danger mr-2" data-toggle="modal" data-target="#DeleteModal" > Delete word </a>
+                            <a class="btn btn-info" href="{{ url_for("test.wrong", word_id=word_id) }}" > Wrong </a>
                         </div>
                     </div>
+                </div>
+                <div class="tab-pane fade" id="user">
+                    <p> There is user setting </p>
                 </div>
             </div>
         </section>

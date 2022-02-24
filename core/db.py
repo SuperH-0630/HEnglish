@@ -178,14 +178,16 @@ class WordDatabase(DataBase):
             w.add_comment(c)
         return w
 
-    def find_word(self, q: str) -> Optional[word.Word]:
+    def find_word(self, q: str, search: bool = True) -> Optional[word.Word]:
         res = self.search(columns=["id", "word", "part", "english", "chinese", "eg"],
                           table="Word",
                           where=f"LOWER(word)='{q.lower()}'")
         if res is None:
             res = []
         if len(res) <= 0:
-            return self.__add_word(q)
+            if search:
+                return self.__add_word(q)
+            return None
         self.__logger.debug(f"Find word (not add) {q}")
         return self.__make_word(q, res)
 
@@ -210,7 +212,7 @@ class WordDatabase(DataBase):
         word_list = self.word_pattern.findall(line)
         for w in word_list:
             try:
-                if self.find_word(w) is None:
+                if self.find_word(w, True) is None:
                     self.__logger.debug(f"update word {w} fail")
                     response.add_error(w)
                 else:
@@ -283,18 +285,32 @@ class WordDatabase(DataBase):
         cur = self.delete(table="Word")
         return cur[1].rowcount
 
+    def right_word(self, w: str):
+        res = self.search(columns=["MIN(box)"], table="Word", where=f"word='{w}'")
+        if len(res) == 0:
+            return False
+        box = res[0][0]
+        if box != 5:
+            box += 1
+            self.update(table="Word", kw={"box": f"{box}"}, where=f"word='{w}'")
+        return True
+
+    def wrong_word(self, w: str):
+        self.update(table="Word", kw={"box": "1"}, where=f"word='{w}'")
+        return True
+
     def rand_word(self):
-        r = random.randint(0, 16)
+        r = random.randint(0, 15)
         if r < 5:
-            box = 2
+            box = 2  # 5
         elif r < 9:
-            box = 3
+            box = 3  # 4
         elif r < 12:
-            box = 4
+            box = 4  # 3
         elif r < 14:
-            box = 5
+            box = 5  # 2
         else:
-            box = 6
+            box = 6  # 1
         # box 的概率比分别为：5:4:3:2:1
 
         count = 0
@@ -307,7 +323,7 @@ class WordDatabase(DataBase):
                     double_check = True
                     box = 6
             box -= 1
-            count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box={box}")[0][0]
-        get = self.search(columns=["word"], table="Word", where=f"box={box}", limit=1, offset=random.randint(0, count))[0][0]
+            count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box<={box}")[0][0]
+        get = self.search(columns=["word"], table="Word", where=f"box<={box}", limit=1, offset=random.randint(0, count - 1))[0][0]
         self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
-        return self.find_word(get)
+        return self.find_word(get, False)
