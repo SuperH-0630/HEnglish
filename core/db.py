@@ -302,27 +302,22 @@ class WordDatabase(DataBase):
     def rand_word(self):
         r = random.randint(0, 15)
         if r < 5:
-            box = 2  # 5
+            box = 0  # 5
         elif r < 9:
-            box = 3  # 4
+            box = 1  # 4
         elif r < 12:
             box = 4  # 3
         elif r < 14:
             box = 5  # 2
         else:
-            box = 6  # 1
+            box = 4  # 1
         # box 的概率比分别为：5:4:3:2:1
 
         count = 0
-        double_check = (box == 6)  # 如果 box 已经是 6 了, 就不需要二次检查了
         while count == 0:
-            if box == 1:
-                if double_check:
-                    return None
-                else:
-                    double_check = True
-                    box = 6
-            box -= 1
+            if box == 5:
+                return None
+            box += 1
             count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box<={box}")[0][0]
         get = self.search(columns=["word"], table="Word", where=f"box<={box}", limit=1, offset=random.randint(0, count - 1))[0][0]
         self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
