@@ -1,20 +1,30 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <article class="container mt-2 mb--2">
+    <article class="container mt-2 mb-2">
         <p class="col-8 offset-2 text-center" > {{ about }} </p>
         <section class="mt-2 text-center">
             <ul id="test" class="nav nav-tabs justify-content-center mb-2">
                 <li class="active nav-item"> <a href="#question" data-toggle="tab" class="nav-link"> Question </a> </li>
-                <li class="nav-item"> <a href="#info" data-toggle="tab" class="nav-link"> Info </a> </li>
-                <li class="nav-item"> <a href="#answer" data-toggle="tab" class="nav-link"> Answer </a> </li>
+                {% if have_word %}
+                    <li class="nav-item"> <a href="#info" data-toggle="tab" class="nav-link"> Info </a> </li>
+                    <li class="nav-item"> <a href="#answer" data-toggle="tab" class="nav-link"> Answer </a> </li>
+                {% endif %}
                 <li class="nav-item"> <a href="#user" data-toggle="tab" class="nav-link"> User </a> </li>
             </ul>
 
             <div id="testContent" class="tab-content">
-                <div class="tab-pane fade" id="question">
-                    <p class="text-center h2"> <u> {{ word.name }} </u> </p>
-                </div>
+                {% if have_word %}
+                    <div class="tab-pane fade" id="question">
+                        <p class="text-center h2"> <u> {{ word.name }} </u> </p>
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <p> Sorry, there not any word. </p>
+                        <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
+                    </div>
+                {% endif %}
+            {% if have_word %}
                 <div class="tab-pane fade" id="info">
                     <div class="col-12 col-lg-6 offset-lg-3">
                         {% for w in word.comment %}
@@ -76,14 +86,80 @@
 
                             <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("test.download", word=word.name) }}"> Download word </a>
-                            <a class="btn btn-danger mr-2 mb-2" data-toggle="modal" data-target="#DeleteModal" > Delete word </a>
-                            <a class="btn btn-info mr-2 mb-2" href="{{ url_for("test.right", word_id=word_id) }}"> Right </a>
-                            <a class="btn btn-info mr-2 mb-2" href="{{ url_for("test.wrong", word_id=word_id) }}" > Wrong </a>
+                            <a class="btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#DeleteModal" > Delete word </a>
+                            <a class="btn btn-success mr-2 mb-2" href="{{ url_for("test.right", word_id=word_id) }}"> Right </a>
+                            <a class="btn btn-danger mr-2 mb-2" href="{{ url_for("test.wrong", word_id=word_id) }}" > Wrong </a>
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 <div class="tab-pane fade" id="user">
-                    <p> There is user setting </p>
+                    <div id="LogoutModal" class="modal fade" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title"> Logout？ </h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p> Are you sure you want to logout '{{ current_user.user }}' ？ </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <a class="btn btn-danger" href="{{ url_for("home.logout") }}" > Sure </a>
+                                    <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ResetModal" class="modal fade" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title"> Reset user？ </h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p> Are you sure you want to reset '{{ current_user.user }}' ？ </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <a class="btn btn-danger" href="" > Sure </a>
+                                    <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6 offset-lg-3 text-left">
+                        <h4 class="mb-2"> User: {{ current_user.user }} </h4>
+                        <p> You have {{ box_sum }} word(s) in database. </p>
+                        <div class="col-12 justify-content-around text-center mb-2">
+                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box1: {{ box[0] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box2: {{ box[1] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box3: {{ box[2] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box4: {{ box[3] }} </span> </a>
+                            <a class="btn btn-light mb-2"> <span class="small"> Box5: {{ box[4] }} </span> </a>
+                        </div>
+
+                        <a class="col-12 btn btn-primary mr-2 mb-2"> Word List </a>
+
+                        <div class="p-2"></div>
+                        <form method="post" action="{{ url_for("test.search") }}">
+                            {{ search.hidden_tag() }}
+
+                            <div class="form-group text-left">
+                                {{ search.search(class="form-control") }}
+                            </div>
+
+                            <div class="text-left">
+                                {{ search.submit(class='btn btn-outline-primary mr-2') }}
+                                {{ search.from_internet() }} {{ search.from_internet.label }}
+                                {{ search.add_to_db() }} {{ search.add_to_db.label }}
+                            </div>
+                        </form>
+
+                        <div class="p-2"></div>
+                        <a class="col-12 btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#LogoutModal"> LOGOUT </a>
+                        <a class="col-12 btn btn-danger mr-2 mb-2" data-toggle="modal" data-target="#ResetModal" > RESET USER </a>
+                    </div>
                 </div>
             </div>
         </section>

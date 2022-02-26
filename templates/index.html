@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <article class="container mt-2 mb--2">
+    <article class="container mt-2 mb-2">
         <p class="col-8 offset-2 text-center" > {{ about }} </p>
         <section class="mt-2 text-center">
             <ul id="auth" class="nav nav-tabs justify-content-center mb-2">
@@ -12,7 +12,7 @@
             <div id="authContent" class="tab-content">
                 <div class="tab-pane fade" id="login">
                     <div class="col-12 col-lg-6 offset-lg-3">
-                        <form method="post" action="{{ url_for("home.login") }}" class="login-form">
+                        <form method="post" action="{{ url_for("home.login") }}">
                             {{ login_form.hidden_tag() }}
 
                             <div class="form-group text-left">
@@ -34,7 +34,7 @@
                 </div>
                 <div class="tab-pane fade" id="register">
                     <div class="col-12 col-lg-6 offset-lg-3">
-                        <form method="post" action="{{ url_for("home.register") }}" class="register-form">
+                        <form method="post" action="{{ url_for("home.register") }}">
                             {{ register_form.hidden_tag() }}
 
                             <div class="form-group text-left">

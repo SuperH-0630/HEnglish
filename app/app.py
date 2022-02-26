@@ -53,7 +53,7 @@ class HEnglishFlask(Flask):
             return user.load_user(name, None)
 
         self.register_blueprint(home.home, url_prefix="/")
-        self.register_blueprint(test.test, url_prefix="/test")
+        self.register_blueprint(test.test, url_prefix="/study")
 
     def update_config(self):
         self.config.update(configure.conf)

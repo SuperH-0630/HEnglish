@@ -1,23 +1,45 @@
-from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response
+from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response, request
 from flask_login import current_user, login_required
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, BooleanField
+from wtforms.validators import DataRequired, Length
 from app.user import UserWordDataBase
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadData
-
+from threading import Thread
+from typing import Optional
+from core.word import Word
 
 test = blueprints.Blueprint("test", __name__)
+
+
+class SearchForm(FlaskForm):
+    search = StringField("Word", validators=[DataRequired(), Length(1, 50)])
+    from_internet = BooleanField("From internet")
+    add_to_db = BooleanField("Add to databases")
+    submit = SubmitField("Search")
+
+
+def __load_word(word):
+    user: UserWordDataBase = current_user
+    box, box_sum = user.get_box_count()
+    search_from = SearchForm()
+    if word is None:
+        return render_template("test.html", word=word, len=len,
+                               box=box, box_sum=box_sum,
+                               search=search_from, have_word=False)
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    word_id = serializer.dumps({"word": word.name})
+    return render_template("test.html", word=word, len=len,
+                           word_id=word_id, box=box, box_sum=box_sum,
+                           search=search_from, have_word=True)  # 需要使用len函数
 
 
 @test.route("/")
 @login_required
 def question():
-    user: UserWordDataBase = current_user
-    word = user.rand_word()
-    if word is None:
-        return render_template("not_word.html")
-    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
-    word_id = serializer.dumps({"word": word.name})
-    return render_template("test.html", word=word, len=len, word_id=word_id)  # 需要使用len函数
+    word = current_user.rand_word()
+    return __load_word(word)
 
 
 @test.route("/right/<string:word_id>")
@@ -72,3 +94,40 @@ def download(word: str):
     response = make_response(w_str)
     response.headers["Content-Disposition"] = f"attachment;filename={word}.henglish.txt"
     return response
+
+
+class Search(Thread):
+    def __init__(self, user: UserWordDataBase, word: str, internet: bool, add: bool):
+        super(Search, self).__init__()
+        self.word: Optional[Word] = None
+        self.word_str = word
+        self.internet = internet
+        self.add = add
+        self.user = user
+        self.daemon = True
+
+    def run(self):
+        self.word = self.user.find_word(self.word_str, self.internet, self.add)
+
+    def wait_event(self) -> Optional[Word]:
+        self.join(timeout=5)
+        return self.word
+
+
+@test.route("/search", methods=["GET", "POST"])
+@login_required
+def search():
+    form = SearchForm()
+    if not form.validate_on_submit():
+        word = request.args.get("word", "")
+        if len(word) == 0:
+            abort(404)
+        user = current_user._get_current_object()
+        th = Search(user, word, request.args.get("internet", 0) != '0', request.args.get("add", 0) != '0')
+        th.start()
+        word = th.wait_event()
+        if th.is_alive():
+            flash("Search timeout")
+        return __load_word(word)
+    return redirect(url_for("test.search",
+                            word=form.search.data, internet=int(form.from_internet.data), add=int(form.add_to_db.data)))

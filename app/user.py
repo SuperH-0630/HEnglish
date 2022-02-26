@@ -4,7 +4,7 @@ import os
 from configure import conf
 from flask_login import UserMixin, AnonymousUserMixin
 import shutil
-from typing import Optional
+from typing import Optional, Tuple
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -37,6 +37,13 @@ class UserWordDataBase(WordDatabase, UserMixin):
 
     def delete_user(self):
         self.delete_self()
+
+    def get_box_count(self) -> Tuple[list, int]:
+        res = self.search(columns=["COUNT(id)", "box"], table="Word", group_by=["box"])
+        ret = [0, 0, 0, 0, 0]
+        for i in res:
+            ret[i[1] - 1] = i[0]
+        return ret, sum(ret)
 
 
 def check_base_db():

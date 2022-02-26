@@ -1,5 +1,5 @@
 from flask import blueprints, url_for, request, redirect, render_template, flash, current_app, abort
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Length, EqualTo
@@ -82,4 +82,12 @@ def register():
             current_app.logger.debug(
                 f"{register_form.name.data} with {register_form.template.data} register fail [{flat}]")
             flash("Register fail")
+    return redirect(url_for("home.index"))
+
+
+@home.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("User logout")
     return redirect(url_for("home.index"))

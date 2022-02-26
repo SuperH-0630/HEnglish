@@ -142,7 +142,7 @@ class WordDatabase(DataBase):
         )''')
         self.wd = word.WordDict()
 
-    def __add_word(self, q: str):
+    def __add_word(self, q: str, add: bool):
         r = self.wd.get_requests(q)
         if not r.is_find:
             return None
@@ -162,9 +162,10 @@ class WordDatabase(DataBase):
                 part = comment.part.replace("'", "''")
                 english = comment.english.replace("'", "''")
                 chinese = comment.chinese.replace("'", "''")
-                self.insert(table='Word',
-                            columns=['word', 'part', 'english', 'chinese', 'eg'],
-                            values=f"'{name_lower}', '{part}', '{english}', '{chinese}', '{eg} '")
+                if add:
+                    self.insert(table='Word',
+                                columns=['word', 'part', 'english', 'chinese', 'eg'],
+                                values=f"'{name_lower}', '{part}', '{english}', '{chinese}', '{eg} '")
                 self.__logger.info(f"Add word name: {name_lower} part: {part}")
         return ret
 
@@ -178,7 +179,7 @@ class WordDatabase(DataBase):
             w.add_comment(c)
         return w
 
-    def find_word(self, q: str, search: bool = True) -> Optional[word.Word]:
+    def find_word(self, q: str, search: bool = True, add: bool = True) -> Optional[word.Word]:
         res = self.search(columns=["id", "word", "part", "english", "chinese", "eg"],
                           table="Word",
                           where=f"LOWER(word)='{q.lower()}'")
@@ -186,7 +187,7 @@ class WordDatabase(DataBase):
             res = []
         if len(res) <= 0:
             if search:
-                return self.__add_word(q)
+                return self.__add_word(q, add)
             return None
         self.__logger.debug(f"Find word (not add) {q}")
         return self.__make_word(q, res)
@@ -212,7 +213,7 @@ class WordDatabase(DataBase):
         word_list = self.word_pattern.findall(line)
         for w in word_list:
             try:
-                if self.find_word(w, True) is None:
+                if self.find_word(w, True, True) is None:
                     self.__logger.debug(f"update word {w} fail")
                     response.add_error(w)
                 else:
