@@ -17,8 +17,8 @@ test = blueprints.Blueprint("test", __name__)
 
 class SearchForm(FlaskForm):
     search = StringField("Word", validators=[DataRequired(), Length(1, 50)])
-    from_internet = BooleanField("From internet")
-    add_to_db = BooleanField("Add to databases")
+    from_internet = BooleanField("Internet")
+    add_to_db = BooleanField("Add")
     submit = SubmitField("Search")
 
 
