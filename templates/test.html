@@ -110,22 +110,33 @@
                         </div>
                     </div>
 
-                    <div id="ResetModal" class="modal fade" role="dialog" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h4 class="modal-title"> Reset user？ </h4>
-                                </div>
-                                <div class="modal-body">
-                                    <p> Are you sure you want to reset '{{ current_user.user }}' ？ </p>
-                                </div>
-                                <div class="modal-footer">
-                                    <a class="btn btn-danger" href="" > Sure </a>
-                                    <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                    <form method="post" action="{{ url_for("test.reset_user") }}">
+                        {{ reset.hidden_tag() }}
+                        <div id="ResetModal" class="modal fade" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title"> Reset user？ </h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p> Are you sure you want to reset '{{ current_user.user }}' ？ </p>
+                                        <div class="form-group text-left">
+                                            {{ reset.name.label }}
+                                            {{ reset.name(class="form-control") }}
+                                        </div>
+                                        <div class="form-group text-left">
+                                            {{ reset.passwd.label }}
+                                            {{ reset.passwd(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        {{ reset.submit(class='btn btn-info mr-2') }}
+                                        <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
 
                     <div class="col-12 col-lg-6 offset-lg-3 text-left">
                         <p class="h4 mb-2"> User: {{ current_user.user }} </p>

@@ -45,6 +45,9 @@ class UserWordDataBase(WordDatabase, UserMixin):
             ret[i[1] - 1] = i[0]
         return ret, sum(ret)
 
+    def reset(self):
+        self.update(table="Word", kw={"box": "1"}, where="1")
+
 
 def check_base_db():
     if os.path.exists(os.path.join(conf["DB_TEMPLATE"], "base.db")):

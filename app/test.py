@@ -2,7 +2,7 @@ from flask import blueprints, render_template, current_app, abort, redirect, url
 from flask import send_file
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField
+from wtforms import StringField, SubmitField, BooleanField, PasswordField
 from wtforms.validators import DataRequired, Length
 from app.user import UserWordDataBase
 from itsdangerous import URLSafeTimedSerializer
@@ -22,10 +22,17 @@ class SearchForm(FlaskForm):
     submit = SubmitField("Search")
 
 
+class ResetForm(FlaskForm):
+    name = StringField("User name", validators=[DataRequired(), Length(1, 32)])
+    passwd = PasswordField("Passwd", validators=[DataRequired(), Length(4, 32)])
+    submit = SubmitField("Reset")
+
+
 def __load_word(word):
     user: UserWordDataBase = current_user
     box, box_sum = user.get_box_count()
     search_from = SearchForm()
+    reset_form = ResetForm()
     if word is None:
         return render_template("test.html", word=word, len=len,
                                box=box, box_sum=box_sum,
@@ -34,7 +41,7 @@ def __load_word(word):
     word_id = serializer.dumps({"word": word.name})
     return render_template("test.html", word=word, len=len,
                            word_id=word_id, box=box, box_sum=box_sum,
-                           search=search_from, have_word=True)  # 需要使用len函数
+                           search=search_from, have_word=True, reset=reset_form)
 
 
 @test.route("/")
@@ -169,3 +176,18 @@ def download_table(file_type: str):
         return abort(404)
     df_io.seek(0, io.SEEK_SET)
     return send_file(df_io, attachment_filename=f"{user.user}.henglish.{file_type}", as_attachment=True)
+
+
+@test.route("/reset", methods=["POST"])
+@login_required
+def reset_user():
+    reset = ResetForm()
+    if reset.validate_on_submit():
+        user: UserWordDataBase = current_user
+        if not user.check_passwd(reset.passwd.data):
+            flash("Passwd error.")
+        else:
+            flash("User reset")
+            user.reset()
+        return redirect(url_for("test.question"))
+    abort(404)
