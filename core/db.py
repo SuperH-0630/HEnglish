@@ -295,7 +295,7 @@ class WordDatabase(DataBase):
         if box != 5:
             box += 1
             name_lower = w.lower().replace("'", "''")
-            self.update(table="Word", kw={"box": f"{box}"}, where=f"LOWED(word)='{name_lower}'")
+            self.update(table="Word", kw={"box": f"{box}"}, where=f"LOWER(word)='{name_lower}'")
         return True
 
     def wrong_word(self, w: str):
