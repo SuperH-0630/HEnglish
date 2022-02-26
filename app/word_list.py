@@ -6,7 +6,7 @@ word_list = blueprints.Blueprint("word_list", __name__)
 
 
 def __load_word_list(res, page, page_count, word_list_title, url, up_url, next_url):
-    if res is None or page > page_count:
+    if res is None or (page != 1 and page > page_count):
         abort(404)
     word = []
     for i in res:
@@ -22,7 +22,7 @@ def __load_word_list(res, page, page_count, word_list_title, url, up_url, next_u
         word.append(item)
     if page == 1:
         up_url = ""
-    if page == page_count:
+    if page >= page_count:
         next_url = ""
     return render_template("word_list.html",
                            word=word,
@@ -39,7 +39,7 @@ def show_all_word():
         page = int(request.args.get("page", 1))
     except (ValueError, TypeError):
         return abort(404)
-    if page < 0:
+    if page < 1:
         abort(404)
     res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
                       table="Word", limit=20, offset=(page - 1) * 20,
@@ -64,7 +64,7 @@ def show_box_word(box: int):
         page = int(request.args.get("page", 1))
     except (ValueError, TypeError):
         return abort(404)
-    if page < 0:
+    if page < 1:
         abort(404)
     res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
                       table="Word", limit=20, offset=(page - 1) * 20, where=f"box={box}",
