@@ -2,9 +2,7 @@ from flask import Flask
 from flask.logging import default_handler
 from flask_login import LoginManager
 import configure
-from app import home
-from app import test
-from app import user
+from app import home, test, user, word_list
 import logging.handlers
 import logging
 import os
@@ -54,6 +52,7 @@ class HEnglishFlask(Flask):
 
         self.register_blueprint(home.home, url_prefix="/")
         self.register_blueprint(test.test, url_prefix="/study")
+        self.register_blueprint(word_list.word_list, url_prefix="/word")
 
     def update_config(self):
         self.config.update(configure.conf)

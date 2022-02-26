@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <article class="container mt-2 mb-2">
+        <h4> Word List </h4>
+        <table class="table table-striped">
+            <caption class="text-center"> {{ word_list_title }} </caption>
+            <thead>
+                <tr>
+                    <th> Box </th>
+                    <th> Word </th>
+                    <th> Part </th>
+                    <th> English note(s) </th>
+                    <th> Chinese note(s) </th>
+                    <th> Example sentence(s) </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in word %}
+                    <tr>
+                        <td> {{ i[0] }} </td>
+                        <td> {{ i[1] }} </td>
+                        <td> {{ i[2] }} </td>
+                        <td> {{ i[3] }} </td>
+                        <td> {{ i[4] }} </td>
+                        <td> {{ i[5] | safe }} </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-center">
+            <div class="btn-group">
+                <a class="btn btn-primary" href="{{ url_for("home.index") }}"> Back to study </a>
+                {% if up_url %}
+                    <a class="btn btn-info" href="{{ up_url }}"> up </a>
+                {% endif %}
+                {% if next_url %}
+                    <a class="btn btn-dark" href="{{ next_url }}"> next </a>
+                {% endif %}
+            </div>
+
+            <form method="get" class="mt-2" action="{{ url }}">
+                <label>
+                    <input type="number" class="form-control" name="page" value="{{ page }}">
+                </label>
+                <input type="submit" class="btn btn-secondary" name="submit" value="goto">
+            </form>
+        </div>
+
+    </article>
+{% endblock %}

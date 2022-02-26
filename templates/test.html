@@ -2,7 +2,6 @@
 
 {% block body %}
     <article class="container mt-2 mb-2">
-        <p class="col-8 offset-2 text-center" > {{ about }} </p>
         <section class="mt-2 text-center">
             <ul id="test" class="nav nav-tabs justify-content-center mb-2">
                 <li class="active nav-item"> <a href="#question" data-toggle="tab" class="nav-link"> Question </a> </li>
@@ -28,9 +27,9 @@
                 <div class="tab-pane fade" id="info">
                     <div class="col-12 col-lg-6 offset-lg-3">
                         {% for w in word.comment %}
-                            <h6 class="text-left">
+                            <p class="h6 text-left">
                                 {{ word.comment[w].part }}
-                            </h6>
+                            </p>
 
                             <ul class="text-left">
                                 {% for e in word.comment[w].eg %}
@@ -43,17 +42,17 @@
                 <div class="tab-pane fade" id="answer">
                     <div class="col-12 col-lg-6 offset-lg-3">
                         {% for w in word.comment %}
-                            <h5 class="text-left">
+                            <p class="h5 text-left">
                                 {{ word.comment[w].chinese }}
-                            </h5>
+                            </p>
 
-                            <h6 class="text-left">
+                            <p class="h6 text-left">
                                 {{ word.comment[w].english }}
-                            </h6>
+                            </p>
 
-                            <h6 class="text-left">
+                            <p class="h6 text-left">
                                 ({{ word.comment[w].part }})
-                            </h6>
+                            </p>
 
                             <ul class="text-left">
                                 {% for e in word.comment[w].eg %}
@@ -129,17 +128,22 @@
                     </div>
 
                     <div class="col-12 col-lg-6 offset-lg-3 text-left">
-                        <h4 class="mb-2"> User: {{ current_user.user }} </h4>
+                        <p class="h4 mb-2"> User: {{ current_user.user }} </p>
                         <p> You have {{ box_sum }} word(s) in database. </p>
                         <div class="col-12 justify-content-around text-center mb-2">
-                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box1: {{ box[0] }} </span> </a>
-                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box2: {{ box[1] }} </span> </a>
-                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box3: {{ box[2] }} </span> </a>
-                            <a class="btn btn-light mr-2 mb-2"> <span class="small"> Box4: {{ box[3] }} </span> </a>
-                            <a class="btn btn-light mb-2"> <span class="small"> Box5: {{ box[4] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=1) }}" >
+                                <span class="small"> Box1: {{ box[0] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=2) }}">
+                                <span class="small"> Box2: {{ box[1] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=3) }}">
+                                <span class="small"> Box3: {{ box[2] }} </span> </a>
+                            <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=4) }}">
+                                <span class="small"> Box4: {{ box[3] }} </span> </a>
+                            <a class="btn btn-light mb-2" href="{{ url_for("word_list.show_box_word", box=5) }}">
+                                <span class="small"> Box5: {{ box[4] }} </span> </a>
                         </div>
 
-                        <a class="col-12 btn btn-primary mr-2 mb-2"> Word List </a>
+                        <a class="col-12 btn btn-primary mr-2 mb-2" href="{{ url_for("word_list.show_all_word") }}"> Word List </a>
 
                         <div class="p-2"></div>
                         <form method="post" action="{{ url_for("test.search") }}">
