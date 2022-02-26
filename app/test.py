@@ -1,4 +1,5 @@
 from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response, request
+from flask import send_file
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField
@@ -9,6 +10,7 @@ from itsdangerous.exc import BadData
 from threading import Thread
 from typing import Optional
 from core.word import Word
+import io
 
 test = blueprints.Blueprint("test", __name__)
 
@@ -131,3 +133,39 @@ def search():
         return __load_word(word)
     return redirect(url_for("test.search",
                             word=form.search.data, internet=int(form.from_internet.data), add=int(form.add_to_db.data)))
+
+
+@test.route("/download_table/<string:file_type>")
+@login_required
+def download_table(file_type: str):
+    user: UserWordDataBase = current_user
+    try:
+        max_eg = int(request.args.get("max_eg", -1))
+    except (ValueError, TypeError):
+        return abort(404)
+    df = user.export_frame(max_eg, file_type == "html")
+    if file_type == "csv":
+        df_io = io.BytesIO()
+        df.to_csv(df_io)
+    elif file_type == "xlsx":
+        df_io = io.BytesIO()
+        df.to_excel(df_io)
+    elif file_type == "html":
+        df_io = io.StringIO()
+        df.to_html(df_io, escape=False)
+        df_io = io.BytesIO(df_io.getvalue().encode('utf-8'))
+    elif file_type == "json":
+        df_io = io.BytesIO()
+        df.to_json(df_io)
+    elif file_type == "markdown":
+        df_io = io.StringIO()
+        df.to_markdown(df_io)
+        df_io = io.BytesIO(df_io.getvalue().encode('utf-8'))
+    elif file_type == "latex":
+        df_io = io.StringIO()
+        df.to_latex(df_io)
+        df_io = io.BytesIO(df_io.getvalue().encode('utf-8'))
+    else:
+        return abort(404)
+    df_io.seek(0, io.SEEK_SET)
+    return send_file(df_io, attachment_filename=f"{user.user}.henglish.{file_type}", as_attachment=True)

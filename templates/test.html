@@ -144,9 +144,16 @@
                         </div>
 
                         <a class="col-12 btn btn-primary mr-2 mb-2" href="{{ url_for("word_list.show_all_word") }}"> Word List </a>
+                        <div class="btn-group mb-2 col-12">
+                            <a class="btn btn-dark" href="{{ url_for("test.download_table", file_type="csv") }}"> csv </a>
+                            <a class="btn btn-secondary" href="{{ url_for("test.download_table", file_type="xlsx") }}"> xlsx </a>
+                            <a class="btn btn-success" href="{{ url_for("test.download_table", file_type="json") }}"> json </a>
+                            <a class="btn btn-danger" href="{{ url_for("test.download_table", file_type="markdown") }}"> markdown </a>
+                            <a class="btn btn-warning" href="{{ url_for("test.download_table", file_type="latex") }}"> latex </a>
+                            <a class="btn btn-light" href="{{ url_for("test.download_table", file_type="html") }}"> html </a>
+                        </div>
 
-                        <div class="p-2"></div>
-                        <form method="post" action="{{ url_for("test.search") }}">
+                        <form method="post" action="{{ url_for("test.search") }}" class="mb-2">
                             {{ search.hidden_tag() }}
 
                             <div class="form-group text-left">
@@ -160,7 +167,6 @@
                             </div>
                         </form>
 
-                        <div class="p-2"></div>
                         <a class="col-12 btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#LogoutModal"> LOGOUT </a>
                         <a class="col-12 btn btn-danger mr-2 mb-2" data-toggle="modal" data-target="#ResetModal" > RESET USER </a>
                     </div>

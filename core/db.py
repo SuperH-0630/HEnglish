@@ -225,7 +225,7 @@ class WordDatabase(DataBase):
         return True, response
 
     @staticmethod
-    def eg_to_str(eg_filed: str, max_eg: int):
+    def eg_to_str(eg_filed: str, max_eg: int, html: bool = False):
         eg = eg_filed.split("@@")
         eg_str = ""
         count_eg = 0
@@ -242,32 +242,41 @@ class WordDatabase(DataBase):
                 chi = ""
             if len(eng.replace(" ", "")) == 0:
                 continue
-            eg_str += f"{eng} ({chi})\n"
+            if html:
+                eg_str += f"{eng} ({chi})<br>"
+            else:
+                eg_str += f"{eng} ({chi})\n"
         return eg_str
 
-    def export_frame(self, max_eg: int = 3) -> Optional[pandas.DataFrame]:
+    def export_frame(self, max_eg: int = 3, html: bool = False) -> Optional[pandas.DataFrame]:
         res = self.search(columns=["box", "word", "part", "english", "chinese", "eg"],
                           table="Word",
-                          order_by=[('box', 'DESC')])
+                          order_by=[("word", "ASC"), ("box", "ASC")])
         if res is None:
             return None
 
-        df = pandas.DataFrame(columns=["Box", "Word", "Part", "English", "Chinese", "Eg"])
-        export = []
-
+        df_box = []
+        df_word = []
+        df_part = []
+        df_english = []
+        df_chinese = []
+        df_eg = []
         for i in res:
-            if i[1] in export:
+            if i[1] in df_word:
                 continue
-            export.append(i[1])
-            eg_str = self.eg_to_str(i[5], max_eg)
-            df = df.append({"Box": str(i[0]),
-                            "Word": str(i[1]),
-                            "Part": str(i[2]),
-                            "English": str(i[3]),
-                            "Chinese": str(i[4]),
-                            "Eg": eg_str}, ignore_index=True)
+            df_box.append(str(i[0]))
+            df_word.append(str(i[1]))
+            df_part.append(str(i[2]))
+            df_english.append(str(i[3]))
+            df_chinese.append(str(i[4]))
+            df_eg.append(self.eg_to_str(i[5], max_eg, html))
             self.__logger.debug(f"export word {i[1]}")
-        return df
+        return pandas.DataFrame(data={"Box": df_box,
+                                      "Word": df_word,
+                                      "Part": df_part,
+                                      "English note(s)": df_english,
+                                      "Chinese note(s)": df_chinese,
+                                      "Example sentence(s)": df_eg})
 
     def delete_txt(self, line: str):
         count = 0
@@ -324,6 +333,7 @@ class WordDatabase(DataBase):
                 return None
             box += 1
             count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box<={box}")[0][0]
-        get = self.search(columns=["word"], table="Word", where=f"box<={box}", limit=1, offset=random.randint(0, count - 1))[0][0]
+        get = self.search(columns=["word"], table="Word", where=f"box<={box}",
+                          limit=1, offset=random.randint(0, count - 1))[0][0]
         self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
         return self.find_word(get, False)

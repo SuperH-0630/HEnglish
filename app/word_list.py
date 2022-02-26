@@ -37,21 +37,21 @@ def show_all_word():
     user: UserWordDataBase = current_user
     try:
         page = int(request.args.get("page", 1))
-        if page < 0:
-            abort(404)
-        res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
-                          table="Word", limit=20, offset=(page - 1) * 20,
-                          order_by=[("word", "ASC"), ("box", "ASC")])
-        word_count = user.search(columns=["COUNT(id)"], table="Word")[0][0]
-        page_count = word_count // 20
-        if word_count % 20 > 0:
-            page_count += 1
-        return __load_word_list(res, page, page_count, f"All Word: {page}",
-                                url_for("word_list.show_all_word"),
-                                url_for("word_list.show_all_word", page=page-1),
-                                url_for("word_list.show_all_word", page=page+1))
     except (ValueError, TypeError):
+        return abort(404)
+    if page < 0:
         abort(404)
+    res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
+                      table="Word", limit=20, offset=(page - 1) * 20,
+                      order_by=[("word", "ASC"), ("box", "ASC")])
+    word_count = user.search(columns=["COUNT(id)"], table="Word")[0][0]
+    page_count = word_count // 20
+    if word_count % 20 > 0:
+        page_count += 1
+    return __load_word_list(res, page, page_count, f"All Word: {page}",
+                            url_for("word_list.show_all_word"),
+                            url_for("word_list.show_all_word", page=page - 1),
+                            url_for("word_list.show_all_word", page=page + 1))
 
 
 @word_list.route("/box/<int:box>")
@@ -62,19 +62,19 @@ def show_box_word(box: int):
         abort(404)
     try:
         page = int(request.args.get("page", 1))
-        if page < 0:
-            abort(404)
-        res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
-                          table="Word", limit=20, offset=(page - 1) * 20, where=f"box={box}",
-                          order_by=[("word", "ASC"), ("box", "ASC")])
-        word_count = user.search(columns=["COUNT(id)"], table="Word", where=f"box={box}")[0][0]
-        page_count = word_count // 20
-        if word_count % 20 > 0:
-            page_count += 1
-        return __load_word_list(res, page, page_count, f"Box{box} Word: {page}",
-                                url_for("word_list.show_box_word", box=box),
-                                url_for("word_list.show_box_word", box=box, page=page-1),
-                                url_for("word_list.show_box_word", box=box, page=page+1))
     except (ValueError, TypeError):
+        return abort(404)
+    if page < 0:
         abort(404)
+    res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
+                      table="Word", limit=20, offset=(page - 1) * 20, where=f"box={box}",
+                      order_by=[("word", "ASC"), ("box", "ASC")])
+    word_count = user.search(columns=["COUNT(id)"], table="Word", where=f"box={box}")[0][0]
+    page_count = word_count // 20
+    if word_count % 20 > 0:
+        page_count += 1
+    return __load_word_list(res, page, page_count, f"Box{box} Word: {page}",
+                            url_for("word_list.show_box_word", box=box),
+                            url_for("word_list.show_box_word", box=box, page=page - 1),
+                            url_for("word_list.show_box_word", box=box, page=page + 1))
 
