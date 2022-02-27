@@ -2,13 +2,13 @@ from flask import blueprints, render_template, current_app, abort, redirect, url
 from flask import send_file
 from flask_login import current_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, PasswordField
+from wtforms import StringField, SubmitField, BooleanField, PasswordField, FileField
 from wtforms.validators import DataRequired, Length
 from app.user import UserWordDataBase
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadData
 from threading import Thread
-from typing import Optional
+from typing import Optional, List
 from core.word import Word
 import io
 
@@ -28,20 +28,37 @@ class ResetDeleteForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
+class UploadFile(FlaskForm):
+    file = FileField()
+    submit = SubmitField("Upload")
+
+
 def __load_word(word):
     user: UserWordDataBase = current_user
     box, box_sum = user.get_box_count()
     search_from = SearchForm()
     reset_delete_form = ResetDeleteForm()
+    upload_form = UploadFile()
+    job: Upload = Upload.upload.get(user.user)
+    if Upload.upload.get(user.user) is not None:
+        if job.is_alive():
+            have_job = True
+        else:
+            flash("Upload finished")
+            have_job = False
+            del Upload.upload[user.user]
+    else:
+        have_job = False
+
+    template_var = dict(word=word, len=len,
+                        box=box, box_sum=box_sum, have_job=have_job,
+                        search=search_from, have_word=False, reset_delete=reset_delete_form, upload=upload_form)
+
     if word is None:
-        return render_template("test.html", word=word, len=len,
-                               box=box, box_sum=box_sum,
-                               search=search_from, have_word=False, reset_delete=reset_delete_form)
+        return render_template("test.html", **template_var)
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     word_id = serializer.dumps({"word": word.name})
-    return render_template("test.html", word=word, len=len,
-                           word_id=word_id, box=box, box_sum=box_sum,
-                           search=search_from, have_word=True, reset_delete=reset_delete_form)
+    return render_template("test.html", **template_var, word_id=word_id)
 
 
 @test.route("/")
@@ -213,3 +230,32 @@ def delete_user():
             user.delete_user()
         return redirect(url_for("test.question"))
     abort(400)
+
+
+class Upload(Thread):
+    upload = {}
+
+    def __init__(self, user: UserWordDataBase, file: List[str]):
+        super(Upload, self).__init__()
+        self.user: UserWordDataBase = user
+        self.file = file
+        self.upload[user.user] = self
+        self.daemon = True
+
+    def run(self):
+        for i in self.file:
+            self.user.import_txt(i)
+
+
+@test.route("/upload", methods=["POST"])
+@login_required
+def upload():
+    file = request.files["file"]
+    user = current_user._get_current_object()
+    job: Upload = Upload.upload.get(user.user)
+    if Upload.upload.get(user.user) is not None and job.is_alive():
+        flash("Please wait for the current task to complete")
+        return abort(423)
+    Upload(user, file.stream.read().decode('utf-8').split('\n')).start()
+    flash("File is being processed")
+    return redirect(url_for("test.question"))

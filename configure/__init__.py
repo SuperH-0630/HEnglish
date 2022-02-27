@@ -12,6 +12,7 @@ conf = {
     "LOG_STDERR": True,
     "LOG_LEVEL": "DEBUG",
     "SERVER_NAME": None,
+    "MAX_CONTENT_LENGTH": 5 * 1024 * 1024,
 }
 
 

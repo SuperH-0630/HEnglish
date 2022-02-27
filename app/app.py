@@ -51,7 +51,7 @@ class HEnglishFlask(Flask):
             return user.load_user(name, None)
 
         func = {"render_template": render_template}
-        for i in [400, 401, 403, 404, 405, 408, 410, 414, 500, 501, 502]:
+        for i in [400, 401, 403, 404, 405, 408, 410, 413, 414, 423, 500, 501, 502]:
             exec(f"def error_{i}(e):\n"
                  f"\treturn render_template('error.html', error_status={i}, error_info=e)", func)
             self.errorhandler(i)(func[f"error_{i}"])

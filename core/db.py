@@ -7,6 +7,7 @@ import re
 import os
 import random
 import configure
+import time
 
 
 class DataBase:
@@ -209,10 +210,11 @@ class WordDatabase(DataBase):
         def response(self):
             return self._success, self._error, self._error_list
 
-    def import_txt(self, line: str):
+    def import_txt(self, line: str, sleep: int = 1):
         response = self.UpdateResponse()
         word_list = self.word_pattern.findall(line)
         for w in word_list:
+            time.sleep(sleep)
             try:
                 if self.find_word(w, True, True) is None:
                     self.__logger.debug(f"update word {w} fail")

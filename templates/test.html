@@ -179,6 +179,16 @@
                             </div>
                         </form>
 
+                        {% if have_job %}
+                            <p class="text-center"> Please wait for the current task to complete. </p>
+                        {% else %}
+                            <form method="post" action="{{ url_for("test.upload") }}" enctype="multipart/form-data" class="mb-2">
+                            {{ upload.hidden_tag() }}
+                            {{ upload.submit(class='btn btn-outline-primary mr-2') }}
+                            {{ upload.file(class="btn") }}
+                        </form>
+                        {% endif %}
+
                         <a class="col-12 btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#LogoutModal"> LOGOUT </a>
                         <a class="col-12 btn btn-danger mr-2 mb-2" data-toggle="modal" data-target="#ResetModal" > RESET/DELETE USER </a>
                     </div>
