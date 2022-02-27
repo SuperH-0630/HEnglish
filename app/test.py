@@ -52,13 +52,14 @@ def __load_word(word):
 
     template_var = dict(word=word, len=len,
                         box=box, box_sum=box_sum, have_job=have_job,
-                        search=search_from, have_word=False, reset_delete=reset_delete_form, upload=upload_form)
+                        search=search_from, reset_delete=reset_delete_form, upload=upload_form)
 
+    print(word)
     if word is None:
-        return render_template("test.html", **template_var)
+        return render_template("test.html", **template_var, have_word=False)
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     word_id = serializer.dumps({"word": word.name})
-    return render_template("test.html", **template_var, word_id=word_id)
+    return render_template("test.html", **template_var, word_id=word_id, have_word=True)
 
 
 @test.route("/")
