@@ -13,84 +13,84 @@
             </ul>
 
             <div id="testContent" class="tab-content">
-                {% if have_word %}
-                    <div class="tab-pane fade" id="question">
+                <div class="tab-pane fade" id="question">
+                    {% if have_word %}
                         <p class="text-center h2"> <u> {{ word.name }} </u> </p>
-                    </div>
-                {% else %}
-                    <div class="text-center">
-                        <p> Sorry, there not any word. </p>
-                        <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
-                    </div>
-                {% endif %}
-            {% if have_word %}
-                <div class="tab-pane fade" id="info">
-                    <div class="col-12 col-lg-6 offset-lg-3">
-                        {% for w in word.comment %}
-                            <p class="h6 text-left">
-                                {{ word.comment[w].part }}
-                            </p>
-
-                            <ul class="text-left">
-                                {% for e in word.comment[w].eg %}
-                                    <li> <p> {{ e.split('##')[0] }} </p> </li>
-                                {% endfor %}
-                            </ul>
-                        {% endfor %}
-                    </div>
+                    {% else %}
+                        <div class="text-center">
+                            <p> Sorry, there not any word. </p>
+                            <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="tab-pane fade" id="answer">
-                    <div class="col-12 col-lg-6 offset-lg-3">
-                        {% for w in word.comment %}
-                            <p class="h5 text-left">
-                                {{ word.comment[w].chinese }}
-                            </p>
+                {% if have_word %}
+                    <div class="tab-pane fade" id="info">
+                        <div class="col-12 col-lg-6 offset-lg-3">
+                            {% for w in word.comment %}
+                                <p class="h6 text-left">
+                                    {{ word.comment[w].part }}
+                                </p>
 
-                            <p class="h6 text-left">
-                                {{ word.comment[w].english }}
-                            </p>
+                                <ul class="text-left">
+                                    {% for e in word.comment[w].eg %}
+                                        <li> <p> {{ e.split('##')[0] }} </p> </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="answer">
+                        <div class="col-12 col-lg-6 offset-lg-3">
+                            {% for w in word.comment %}
+                                <p class="h5 text-left">
+                                    {{ word.comment[w].chinese }}
+                                </p>
 
-                            <p class="h6 text-left">
-                                ({{ word.comment[w].part }})
-                            </p>
+                                <p class="h6 text-left">
+                                    {{ word.comment[w].english }}
+                                </p>
 
-                            <ul class="text-left">
-                                {% for e in word.comment[w].eg %}
-                                    <li>
-                                        <p> {{ e.split('##')[0] }} </p>
-                                        <p> {{ e.split('##')[1] }} </p>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endfor %}
-                        <div class="row justify-content-center mb-2">
+                                <p class="h6 text-left">
+                                    ({{ word.comment[w].part }})
+                                </p>
 
-                            <div id="DeleteModal" class="modal fade" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h4 class="modal-title"> Do you sure delete this word？ </h4>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p> Do you sure delete '{{ word.name }}' ？ </p>
-                                            <p> After doing this, you will never see this word again. </p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <a class="btn btn-danger" href="{{ url_for("test.delete", word=word.name) }}" > Sure </a>
-                                            <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                                <ul class="text-left">
+                                    {% for e in word.comment[w].eg %}
+                                        <li>
+                                            <p> {{ e.split('##')[0] }} </p>
+                                            <p> {{ e.split('##')[1] }} </p>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endfor %}
+                            <div class="row justify-content-center mb-2">
+
+                                <div id="DeleteModal" class="modal fade" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title"> Do you sure delete this word？ </h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p> Do you sure delete '{{ word.name }}' ？ </p>
+                                                <p> After doing this, you will never see this word again. </p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <a class="btn btn-danger" href="{{ url_for("test.delete", word=word.name) }}" > Sure </a>
+                                                <a class="btn btn-secondary" data-dismiss="modal"> No </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
-                            <a class="btn btn-light mr-2 mb-2" href="{{ url_for("test.download", word=word.name) }}"> Download word </a>
-                            <a class="btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#DeleteModal" > Delete word </a>
-                            <a class="btn btn-success mr-2 mb-2" href="{{ url_for("test.right", word_id=word_id) }}"> Right </a>
-                            <a class="btn btn-danger mr-2 mb-2" href="{{ url_for("test.wrong", word_id=word_id) }}" > Wrong </a>
+                                <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
+                                <a class="btn btn-light mr-2 mb-2" href="{{ url_for("test.download", word=word.name) }}"> Download word </a>
+                                <a class="btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#DeleteModal" > Delete word </a>
+                                <a class="btn btn-success mr-2 mb-2" href="{{ url_for("test.right", word_id=word_id) }}"> Right </a>
+                                <a class="btn btn-danger mr-2 mb-2" href="{{ url_for("test.wrong", word_id=word_id) }}" > Wrong </a>
+                            </div>
                         </div>
                     </div>
-                </div>
                 {% endif %}
                 <div class="tab-pane fade" id="user">
                     <div id="LogoutModal" class="modal fade" role="dialog" aria-hidden="true">
@@ -110,27 +110,28 @@
                         </div>
                     </div>
 
-                    <form method="post" action="{{ url_for("test.reset_user") }}">
-                        {{ reset.hidden_tag() }}
+                    <form>
+                        {{ reset_delete.hidden_tag() }}
                         <div id="ResetModal" class="modal fade" role="dialog" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h4 class="modal-title"> Reset user？ </h4>
+                                        <h4 class="modal-title"> Reset or delete user？ </h4>
                                     </div>
                                     <div class="modal-body">
-                                        <p> Are you sure you want to reset '{{ current_user.user }}' ？ </p>
+                                        <p> Are you sure you want to reset or delete '{{ current_user.user }}' ？ </p>
                                         <div class="form-group text-left">
-                                            {{ reset.name.label }}
-                                            {{ reset.name(class="form-control") }}
+                                            {{ reset_delete.name.label }}
+                                            {{ reset_delete.name(class="form-control") }}
                                         </div>
                                         <div class="form-group text-left">
-                                            {{ reset.passwd.label }}
-                                            {{ reset.passwd(class="form-control") }}
+                                            {{ reset_delete.passwd.label }}
+                                            {{ reset_delete.passwd(class="form-control") }}
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        {{ reset.submit(class='btn btn-info mr-2') }}
+                                        {{ reset_delete.submit(class='btn btn-outline-danger mr-2', formmethod="post", formaction=url_for("test.reset_user"), value="Reset") }}
+                                        {{ reset_delete.submit(class='btn btn-danger mr-2', formmethod="post", formaction=url_for("test.delete_user"), value="Delete") }}
                                         <a class="btn btn-secondary" data-dismiss="modal"> No </a>
                                     </div>
                                 </div>
@@ -179,7 +180,7 @@
                         </form>
 
                         <a class="col-12 btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#LogoutModal"> LOGOUT </a>
-                        <a class="col-12 btn btn-danger mr-2 mb-2" data-toggle="modal" data-target="#ResetModal" > RESET USER </a>
+                        <a class="col-12 btn btn-danger mr-2 mb-2" data-toggle="modal" data-target="#ResetModal" > RESET/DELETE USER </a>
                     </div>
                 </div>
             </div>

@@ -7,7 +7,7 @@ word_list = blueprints.Blueprint("word_list", __name__)
 
 def __load_word_list(res, page, page_count, word_list_title, url, up_url, next_url):
     if res is None or (page != 1 and page > page_count):
-        abort(404)
+        abort(400)
     word = []
     for i in res:
         item = [i[1], i[0], i[2], i[3], i[4], ""]
@@ -38,9 +38,9 @@ def show_all_word():
     try:
         page = int(request.args.get("page", 1))
     except (ValueError, TypeError):
-        return abort(404)
+        return abort(400)
     if page < 1:
-        abort(404)
+        abort(400)
     res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
                       table="Word", limit=20, offset=(page - 1) * 20,
                       order_by=[("word", "ASC"), ("box", "ASC")])
@@ -59,13 +59,13 @@ def show_all_word():
 def show_box_word(box: int):
     user: UserWordDataBase = current_user
     if box < 0 or box > 5:
-        abort(404)
+        abort(400)
     try:
         page = int(request.args.get("page", 1))
     except (ValueError, TypeError):
-        return abort(404)
+        return abort(400)
     if page < 1:
-        abort(404)
+        abort(400)
     res = user.search(columns=["word", "box", "part", "english", "chinese", "eg"],
                       table="Word", limit=20, offset=(page - 1) * 20, where=f"box={box}",
                       order_by=[("word", "ASC"), ("box", "ASC")])

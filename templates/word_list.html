@@ -30,10 +30,10 @@
         </table>
         <div class="text-center">
             <div class="btn-group">
-                <a class="btn btn-primary" href="{{ url_for("home.index") }}"> Back to study </a>
                 {% if up_url %}
                     <a class="btn btn-info" href="{{ up_url }}"> up </a>
                 {% endif %}
+                <a class="btn btn-primary" href="{{ url_for("home.index") }}"> Back to study </a>
                 {% if next_url %}
                     <a class="btn btn-dark" href="{{ next_url }}"> next </a>
                 {% endif %}

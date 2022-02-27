@@ -1,6 +1,6 @@
 from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response, request
 from flask import send_file
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, PasswordField
 from wtforms.validators import DataRequired, Length
@@ -22,26 +22,26 @@ class SearchForm(FlaskForm):
     submit = SubmitField("Search")
 
 
-class ResetForm(FlaskForm):
+class ResetDeleteForm(FlaskForm):
     name = StringField("User name", validators=[DataRequired(), Length(1, 32)])
     passwd = PasswordField("Passwd", validators=[DataRequired(), Length(4, 32)])
-    submit = SubmitField("Reset")
+    submit = SubmitField("Submit")
 
 
 def __load_word(word):
     user: UserWordDataBase = current_user
     box, box_sum = user.get_box_count()
     search_from = SearchForm()
-    reset_form = ResetForm()
+    reset_delete_form = ResetDeleteForm()
     if word is None:
         return render_template("test.html", word=word, len=len,
                                box=box, box_sum=box_sum,
-                               search=search_from, have_word=False)
+                               search=search_from, have_word=False, reset_delete=reset_delete_form)
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     word_id = serializer.dumps({"word": word.name})
     return render_template("test.html", word=word, len=len,
                            word_id=word_id, box=box, box_sum=box_sum,
-                           search=search_from, have_word=True, reset=reset_form)
+                           search=search_from, have_word=True, reset_delete=reset_delete_form)
 
 
 @test.route("/")
@@ -59,7 +59,10 @@ def right(word_id: str):
         word: dict = serializer.loads(word_id, max_age=120)  # 120s内生效
         user: UserWordDataBase = current_user
         user.right_word(word["word"])
-    except (BadData, KeyError):
+    except BadData:
+        flash(f"Timeout for confirm word")
+        abort(408)
+    except KeyError:
         abort(404)
     return redirect(url_for("test.question"))
 
@@ -72,7 +75,10 @@ def wrong(word_id: str):
         word: dict = serializer.loads(word_id, max_age=120)  # 120s内生效
         user: UserWordDataBase = current_user
         user.wrong_word(word["word"])
-    except (BadData, KeyError):
+    except BadData:
+        flash(f"Timeout for confirm word")
+        abort(408)
+    except KeyError:
         abort(404)
     return redirect(url_for("test.question"))
 
@@ -130,7 +136,7 @@ def search():
     if not form.validate_on_submit():
         word = request.args.get("word", "")
         if len(word) == 0:
-            abort(404)
+            abort(400)
         user = current_user._get_current_object()
         th = Search(user, word, request.args.get("internet", 0) != '0', request.args.get("add", 0) != '0')
         th.start()
@@ -149,7 +155,7 @@ def download_table(file_type: str):
     try:
         max_eg = int(request.args.get("max_eg", -1))
     except (ValueError, TypeError):
-        return abort(404)
+        return abort(400)
     df = user.export_frame(max_eg, file_type == "html")
     if file_type == "csv":
         df_io = io.BytesIO()
@@ -173,21 +179,37 @@ def download_table(file_type: str):
         df.to_latex(df_io)
         df_io = io.BytesIO(df_io.getvalue().encode('utf-8'))
     else:
-        return abort(404)
+        return abort(400)
     df_io.seek(0, io.SEEK_SET)
     return send_file(df_io, attachment_filename=f"{user.user}.henglish.{file_type}", as_attachment=True)
 
 
-@test.route("/reset", methods=["POST"])
+@test.route("/reset_user", methods=["POST"])
 @login_required
 def reset_user():
-    reset = ResetForm()
-    if reset.validate_on_submit():
+    reset_form = ResetDeleteForm()
+    if reset_form.validate_on_submit():
         user: UserWordDataBase = current_user
-        if not user.check_passwd(reset.passwd.data):
+        if not user.check_passwd(reset_form.passwd.data):
             flash("Passwd error.")
         else:
             flash("User reset")
             user.reset()
         return redirect(url_for("test.question"))
-    abort(404)
+    abort(400)
+
+
+@test.route("/delete_user", methods=["POST"])
+@login_required
+def delete_user():
+    delete_form = ResetDeleteForm()
+    if delete_form.validate_on_submit():
+        user: UserWordDataBase = current_user
+        if not user.check_passwd(delete_form.passwd.data):
+            flash("Passwd error.")
+        else:
+            flash("User reset")
+            logout_user()
+            user.delete_user()
+        return redirect(url_for("test.question"))
+    abort(400)

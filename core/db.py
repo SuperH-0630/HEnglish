@@ -180,9 +180,10 @@ class WordDatabase(DataBase):
         return w
 
     def find_word(self, q: str, search: bool = True, add: bool = True) -> Optional[word.Word]:
+        name_lower = q.lower().replace("'", "''")
         res = self.search(columns=["id", "word", "part", "english", "chinese", "eg"],
                           table="Word",
-                          where=f"LOWER(word)='{q.lower()}'")
+                          where=f"LOWER(word)='{name_lower}'")
         if res is None:
             res = []
         if len(res) <= 0:
@@ -282,7 +283,8 @@ class WordDatabase(DataBase):
         count = 0
         word_list = self.word_pattern.findall(line)
         for w in word_list:
-            cur = self.delete(table="Word", where=f"LOWER(word)='{w.lower()}'")
+            name_lower = w.lower().replace("'", "''")
+            cur = self.delete(table="Word", where=f"LOWER(word)='{name_lower}'")
             if cur[1].rowcount != -1:
                 self.__logger.debug(f"delete word {w} success")
                 count += 1
@@ -308,7 +310,7 @@ class WordDatabase(DataBase):
         return True
 
     def wrong_word(self, w: str):
-        name_lower = w.lower().replace("'", "''")
+        name_lower = w.lower().replace('\'', '\'\'')
         self.update(table="Word", kw={"box": "1"}, where=f"LOWER(word)='{name_lower}'")
         return True
 

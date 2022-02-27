@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask.logging import default_handler
 from flask_login import LoginManager
 import configure
@@ -49,6 +49,12 @@ class HEnglishFlask(Flask):
         @self.login_manager.user_loader
         def user_loader(name: str):
             return user.load_user(name, None)
+
+        func = {"render_template": render_template}
+        for i in [400, 401, 403, 404, 405, 408, 410, 414, 500, 501, 502]:
+            exec(f"def error_{i}(e):\n"
+                 f"\treturn render_template('error.html', error_status={i}, error_info=e)", func)
+            self.errorhandler(i)(func[f"error_{i}"])
 
         self.register_blueprint(home.home, url_prefix="/")
         self.register_blueprint(test.test, url_prefix="/study")

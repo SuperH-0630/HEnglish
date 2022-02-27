@@ -45,6 +45,7 @@ def index():
 def login():
     if not current_user.is_anonymous:
         current_app.logger.debug(f"re-login and abort(304)")
+        flash(f"You are login as {current_user.name}")
         abort(304)
 
     login_form = LoginForm()
@@ -67,6 +68,7 @@ def login():
 def register():
     if not current_user.is_anonymous:
         current_app.logger.debug(f"re-login and register(304)")
+        flash(f"You are login as {current_user.name}")
         abort(304)
 
     register_form = RegisterForm()
