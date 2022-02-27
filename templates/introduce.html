@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <article class="container mt-2 mb-2 text-left">
+        <h4> What is this? </h4>
+        <p style="text-indent: 2em"> HEnglish is an English learning engine, and this website is an implementation of that engine. </p>
+        <h4> How it helps us learn English? </h4>
+        <p style="text-indent: 2em"> It helps us memorize words </p>
+        <h4> How to ues it? </h4>
+        <p style="text-indent: 2em"> First register an account, select the word bank (template), and then log in to the account.
+            At this point you will see the words displayed in English. Try to recall the Chinese meaning of the word in your mind,
+            then click answer to see if you remember the word correctly (note that you only have 120s), and select right, wrong
+            (if you want to skip a word, you can click Next word, if you want to delete it Words can click Delete word, if
+            you want to download words, you can click Download).
+            The system will divide the words into 5 levels according to your familiarity. Words of different levels will appear at different frequencies.
+            Click info to view some English example sentences of the word, which is helpful for memory.
+            Click on user to see the user's information, as well as the glossary.
+            You can click csv, xlsx, etc. to download word documents in different formats.
+            You can reset the user and re-memorize the words. </p>
+
+        <div class="text-center"> <a class="btn btn-primary" href="{{ url_for("home.index") }}"> Back to study </a> </div>
+    </article>
+{% endblock %}

@@ -260,3 +260,8 @@ def upload():
     Upload(user, file.stream.read().decode('utf-8').split('\n')).start()
     flash("File is being processed")
     return redirect(url_for("test.question"))
+
+
+@test.route("/introduce")
+def introduce():
+    return render_template("introduce.html")
