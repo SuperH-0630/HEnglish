@@ -146,9 +146,10 @@
                     </form>
 
                     <div class="col-12 col-lg-6 offset-lg-3 text-left">
-                        <p class="h4 mb-2"> User: {{ current_user.user }} </p>
-                        <p> You have {{ box_sum }} word(s) in database. </p>
-                        <div class="col-12 justify-content-around text-center mb-2">
+                        <p class="h4 mb-2 col-12"> User: {{ current_user.user }} </p>
+                        <p class="col-12"> You have {{ box_sum }} word(s) in database. </p>
+
+                        <div class="col-12 text-center mb-2">
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=1) }}" >
                                 <span class="small"> Box1: {{ box[0] }} </span> </a>
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=2) }}">
@@ -161,14 +162,16 @@
                                 <span class="small"> Box5: {{ box[4] }} </span> </a>
                         </div>
 
-                        <a class="col-12 btn btn-primary mr-2 mb-2" href="{{ url_for("word_list.show_all_word") }}"> Word List </a>
-                        <div class="btn-group mb-2 col-12">
-                            <a class="btn btn-dark" href="{{ url_for("test.download_table", file_type="csv") }}"> csv </a>
-                            <a class="btn btn-secondary" href="{{ url_for("test.download_table", file_type="xlsx") }}"> xlsx </a>
-                            <a class="btn btn-success" href="{{ url_for("test.download_table", file_type="json") }}"> json </a>
-                            <a class="btn btn-danger" href="{{ url_for("test.download_table", file_type="markdown") }}"> md </a>
-                            <a class="btn btn-warning" href="{{ url_for("test.download_table", file_type="latex") }}"> latex </a>
-                            <a class="btn btn-light" href="{{ url_for("test.download_table", file_type="html") }}"> html </a>
+                        <a class="col-12 btn btn-primary mb-2" href="{{ url_for("word_list.show_all_word") }}"> Word List </a>
+                        <div class="text-center">
+                            <div class="btn-group mb-2" role="group">
+                                <a class="btn btn-dark" href="{{ url_for("test.download_table", file_type="csv") }}"> csv </a>
+                                <a class="btn btn-secondary" href="{{ url_for("test.download_table", file_type="xlsx") }}"> xlsx </a>
+                                <a class="btn btn-success" href="{{ url_for("test.download_table", file_type="json") }}"> json </a>
+                                <a class="btn btn-danger" href="{{ url_for("test.download_table", file_type="markdown") }}"> md </a>
+                                <a class="btn btn-warning" href="{{ url_for("test.download_table", file_type="latex") }}"> latex </a>
+                                <a class="btn btn-light" href="{{ url_for("test.download_table", file_type="html") }}"> html </a>
+                            </div>
                         </div>
 
                         <form method="post" action="{{ url_for("test.search") }}" class="mb-2">

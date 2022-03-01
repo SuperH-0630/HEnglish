@@ -30,7 +30,7 @@ class ResetDeleteForm(FlaskForm):
 
 
 class UploadFile(FlaskForm):
-    file = FileField()
+    file = FileField("File")
     submit = SubmitField("Upload")
 
 
