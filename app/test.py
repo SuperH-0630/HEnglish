@@ -25,6 +25,7 @@ class SearchForm(FlaskForm):
 class ResetDeleteForm(FlaskForm):
     name = StringField("User name", validators=[DataRequired()])
     passwd = PasswordField("Passwd", validators=[DataRequired()])
+    new_passwd = PasswordField("New passwd")
     submit = SubmitField("Submit")
 
 
@@ -53,8 +54,6 @@ def __load_word(word):
     template_var = dict(word=word, len=len,
                         box=box, box_sum=box_sum, have_job=have_job,
                         search=search_from, reset_delete=reset_delete_form, upload=upload_form)
-
-    print(word)
     if word is None:
         return render_template("test.html", **template_var, have_word=False)
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
@@ -229,6 +228,26 @@ def delete_user():
             flash("User reset")
             logout_user()
             user.delete_user()
+        return redirect(url_for("test.question"))
+    abort(400)
+
+
+@test.route("/reset_passwd", methods=["POST"])
+@login_required
+def reset_passwd():
+    reset_form = ResetDeleteForm()
+    if reset_form.validate_on_submit():
+        if len(reset_form.new_passwd.data) < 4 or len(reset_form.new_passwd.data) > 32:
+            flash("Please enter a password of length 4-32")
+        else:
+            user: UserWordDataBase = current_user
+            if not user.check_passwd(reset_form.passwd.data):
+                flash("Passwd error.")
+            else:
+                flash("User passwd reset")
+                user.set_passwd(reset_form.new_passwd.data)
+                logout_user()
+                return redirect(url_for("home.index"))
         return redirect(url_for("test.question"))
     abort(400)
 

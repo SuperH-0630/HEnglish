@@ -116,7 +116,7 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h4 class="modal-title"> Reset or delete user？ </h4>
+                                        <h4 class="modal-title"> Reset or delete user？ Or you can just set new passwd. </h4>
                                     </div>
                                     <div class="modal-body">
                                         <p> Are you sure you want to reset or delete '{{ current_user.user }}' ？ </p>
@@ -128,8 +128,14 @@
                                             {{ reset_delete.passwd.label }}
                                             {{ reset_delete.passwd(class="form-control") }}
                                         </div>
+
+                                        <div class="form-group text-left">
+                                            {{ reset_delete.new_passwd.label }}
+                                            {{ reset_delete.new_passwd(class="form-control") }}
+                                        </div>
                                     </div>
                                     <div class="modal-footer">
+                                        {{ reset_delete.submit(class='btn btn-outline-danger mr-2', formmethod="post", formaction=url_for("test.reset_passwd"), value="Set new passwd") }}
                                         {{ reset_delete.submit(class='btn btn-outline-danger mr-2', formmethod="post", formaction=url_for("test.reset_user"), value="Reset") }}
                                         {{ reset_delete.submit(class='btn btn-danger mr-2', formmethod="post", formaction=url_for("test.delete_user"), value="Delete") }}
                                         <a class="btn btn-secondary" data-dismiss="modal"> No </a>
