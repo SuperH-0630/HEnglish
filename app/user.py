@@ -60,6 +60,17 @@ def check_template(template: str) -> bool:
     return os.path.exists(os.path.join(conf["DB_TEMPLATE"], f"{template}.db"))
 
 
+def get_template():
+    check_base_db()
+    file_list = os.listdir(conf["DB_TEMPLATE"])
+    template = []
+    for i in file_list:
+        if i.endswith(".db"):
+            i = i[:-3]
+            template.append((i, i.replace("_", " ")))
+    return template
+
+
 def create_user(template: str, name: str, passwd: str):
     check_base_db()
     if not os.path.exists(os.path.join(conf["DB_TEMPLATE"], f"{template}.db")):
