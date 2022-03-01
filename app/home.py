@@ -2,25 +2,23 @@ from flask import blueprints, url_for, request, redirect, render_template, flash
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Length, EqualTo
+from wtforms.validators import DataRequired
 from app.user import load_user, create_user, check_template, get_template
 from typing import ClassVar
 
 
 class LoginForm(FlaskForm):
-    name = StringField("User name", validators=[DataRequired(), Length(1, 32)])
-    passwd = PasswordField("Passwd", validators=[DataRequired(), Length(4, 32)])
+    name = StringField("User name", validators=[DataRequired()])
+    passwd = PasswordField("Passwd", validators=[DataRequired()])
     remember = BooleanField("Remember me")
     submit = SubmitField("Login")
 
 
 def register_form() -> ClassVar:
     class Form(FlaskForm):
-        name = StringField("User name", validators=[DataRequired(), Length(1, 32)])
+        name = StringField("User name", validators=[DataRequired()])
         template = SelectField("Template", choices=get_template())
-        passwd = PasswordField("Passwd", validators=[DataRequired(),
-                                                     EqualTo("passwd_again", message="两次输入密码不相同"),
-                                                     Length(4, 32)])
+        passwd = PasswordField("Passwd", validators=[DataRequired()])
         passwd_again = PasswordField("Passwd again", validators=[DataRequired()])
         submit = SubmitField("register")
     return Form()
@@ -68,20 +66,27 @@ def register():
 
     register_ = register_form()
     if register_.validate_on_submit():
-        template = register_.template.data
-        if len(template) == 0:
-            template = "base"
-        if not check_template(template):
-            flash(f"Template '{template}' not exist")
-            abort(400)
-        flat, user = create_user(template, register_.name.data, register_.passwd.data)
-        if user is not None:
-            current_app.logger.debug(f"{register_.name.data} with {register_.template.data} register success")
-            flash("Register success")
+        if register_.passwd.data != register_.passwd_again.data:
+            flash("The two entered passwords do not match")
+        elif len(register_.passwd.data) < 4 or len(register_.passwd.data) > 32:
+            flash("Please enter a password of length 4-32")
+        elif len(register_.name.data) > 16:
+            flash("Please enter a username of length 1-16")
         else:
-            current_app.logger.debug(
-                f"{register_.name.data} with {register_.template.data} register fail [{flat}]")
-            flash("User is already exist")
+            template = register_.template.data
+            if len(template) == 0:
+                template = "base"
+            if not check_template(template):
+                flash(f"Template '{template}' not exist")
+                abort(400)
+            flat, user = create_user(template, register_.name.data, register_.passwd.data)
+            if user is not None:
+                current_app.logger.debug(f"{register_.name.data} with {register_.template.data} register success")
+                flash("Register success")
+            else:
+                current_app.logger.debug(
+                    f"{register_.name.data} with {register_.template.data} register fail [{flat}]")
+                flash("User is already exist")
     return redirect(url_for("home.index"))
 
 

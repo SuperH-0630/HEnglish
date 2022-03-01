@@ -1,7 +1,6 @@
-from flask import Flask, render_template, flash
+from flask import Flask, render_template
 from flask.logging import default_handler
 from flask_login import LoginManager
-from wtforms import ValidationError
 import configure
 from app import home, test, user, word_list
 import logging.handlers

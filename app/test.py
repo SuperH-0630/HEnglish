@@ -3,7 +3,7 @@ from flask import send_file
 from flask_login import current_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, PasswordField, FileField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired
 from app.user import UserWordDataBase
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadData
@@ -16,15 +16,15 @@ test = blueprints.Blueprint("test", __name__)
 
 
 class SearchForm(FlaskForm):
-    search = StringField("Word", validators=[DataRequired(), Length(1, 50)])
+    search = StringField("Word", validators=[DataRequired()])
     from_internet = BooleanField("Internet")
     add_to_db = BooleanField("Add")
     submit = SubmitField("Search")
 
 
 class ResetDeleteForm(FlaskForm):
-    name = StringField("User name", validators=[DataRequired(), Length(1, 32)])
-    passwd = PasswordField("Passwd", validators=[DataRequired(), Length(4, 32)])
+    name = StringField("User name", validators=[DataRequired()])
+    passwd = PasswordField("Passwd", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 
