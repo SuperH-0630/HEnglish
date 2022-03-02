@@ -336,8 +336,8 @@ class WordDatabase(DataBase):
                 print()
                 return None
             box += 1
-            count = self.search(columns=["COUNT(ID)"], table="Word", where=f"box<={box}")[0][0]
-        get = self.search(columns=["word"], table="Word", where=f"box<={box}",
+            count = self.search(columns=["COUNT(DISTINCT word)"], table="Word", where=f"box<={box}")[0][0]
+        get = self.search(columns=["DISTINCT word"], table="Word", where=f"box<={box}",
                           limit=1, offset=random.randint(0, count - 1))[0][0]
         self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
         return self.find_word(get, False)
