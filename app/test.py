@@ -100,7 +100,7 @@ def wrong(word_id: str):
     return redirect(url_for("test.question"))
 
 
-@test.route("/delete/<string:word>")
+@test.route("/delete/word/<string:word>")
 @login_required
 def delete(word: str):
     user: UserWordDataBase = current_user
@@ -109,7 +109,7 @@ def delete(word: str):
     return redirect(url_for("test.question"))
 
 
-@test.route("/download/<string:word>")
+@test.route("/download/word/<string:word>")
 @login_required
 def download(word: str):
     user: UserWordDataBase = current_user
@@ -165,7 +165,7 @@ def search():
                             word=form.search.data, internet=int(form.from_internet.data), add=int(form.add_to_db.data)))
 
 
-@test.route("/download_table/<string:file_type>")
+@test.route("/download/table/<string:file_type>")
 @login_required
 def download_table(file_type: str):
     user: UserWordDataBase = current_user
@@ -201,7 +201,7 @@ def download_table(file_type: str):
     return send_file(df_io, attachment_filename=f"{user.user}.henglish.{file_type}", as_attachment=True)
 
 
-@test.route("/reset_user", methods=["POST"])
+@test.route("/reset/user", methods=["POST"])
 @login_required
 def reset_user():
     reset_form = ResetDeleteForm()
@@ -216,7 +216,7 @@ def reset_user():
     abort(400)
 
 
-@test.route("/delete_user", methods=["POST"])
+@test.route("/delete/user", methods=["POST"])
 @login_required
 def delete_user():
     delete_form = ResetDeleteForm()
@@ -232,7 +232,7 @@ def delete_user():
     abort(400)
 
 
-@test.route("/reset_passwd", methods=["POST"])
+@test.route("/reset/passwd", methods=["POST"])
 @login_required
 def reset_passwd():
     reset_form = ResetDeleteForm()
