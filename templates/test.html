@@ -4,27 +4,17 @@
     <article class="container mt-2 mb-2">
         <section class="mt-2 text-center">
             <ul id="test" class="nav nav-tabs justify-content-center mb-2">
-                <li class="active nav-item"> <a href="#question" data-toggle="tab" class="nav-link"> Question </a> </li>
+                <li class="active nav-item"> <a href="#word" data-toggle="tab" class="nav-link"> Word </a> </li>
                 {% if have_word %}
                     <li class="nav-item"> <a href="#info" data-toggle="tab" class="nav-link"> Info </a> </li>
-                    <li class="nav-item"> <a href="#answer" data-toggle="tab" class="nav-link"> Answer </a> </li>
                 {% endif %}
                 <li class="nav-item"> <a href="#user" data-toggle="tab" class="nav-link"> User </a> </li>
             </ul>
 
             <div id="testContent" class="tab-content">
-                <div class="tab-pane fade" id="question">
+                <div class="tab-pane fade" id="word">
                     {% if have_word %}
                         <p class="text-center h2"> <u> {{ word.name }} </u> </p>
-                    {% else %}
-                        <div class="text-center">
-                            <p> Sorry, there not any word. </p>
-                            <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
-                        </div>
-                    {% endif %}
-                </div>
-                {% if have_word %}
-                    <div class="tab-pane fade" id="info">
                         <div class="col-12 col-lg-6 offset-lg-3">
                             {% for w in word.comment %}
                                 <p class="h6 text-left">
@@ -38,8 +28,15 @@
                                 </ul>
                             {% endfor %}
                         </div>
-                    </div>
-                    <div class="tab-pane fade" id="answer">
+                    {% else %}
+                        <div class="text-center">
+                            <p> Sorry, there not any word. </p>
+                            <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if have_word %}
+                    <div class="tab-pane fade" id="info">
                         <div class="col-12 col-lg-6 offset-lg-3">
                             {% for w in word.comment %}
                                 <p class="h5 text-left">
