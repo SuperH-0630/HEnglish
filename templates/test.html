@@ -15,6 +15,7 @@
                 <div class="tab-pane fade" id="word">
                     {% if have_word %}
                         <p class="text-center h2"> <u> {{ word.name }} </u> </p>
+                        <p class="h5 text-center"> Box: {{ word.box }} </p>
                         <div class="col-12 col-lg-6 offset-lg-3">
                             {% for w in word.comment %}
                                 <p class="h6 text-left">

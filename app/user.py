@@ -40,7 +40,6 @@ class UserWordDataBase(WordDatabase, UserMixin):
 
     def get_box_count(self) -> Tuple[list, list, int, int]:
         res = self.search(columns=["COUNT(word)", "COUNT(DISTINCT word)", "box"], table="Word", group_by=["box"])
-        print(res)
         ret = [0, 0, 0, 0, 0]
         ret_distinct = [0, 0, 0, 0, 0]
         for i in res:

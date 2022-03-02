@@ -173,21 +173,22 @@ class WordDatabase(DataBase):
     @staticmethod
     def __make_word(q: str, res: list):
         w = word.Word(q)
+        box = 6
         for i in res:
             c = word.Word.Comment(i[2], i[3], i[4])
             for e in i[5].split("@@"):
                 c.add_eg(e)
             w.add_comment(c)
+            box = min(i[6], box)
+        w.set_box(box)
         return w
 
     def find_word(self, q: str, search: bool = True, add: bool = True) -> Optional[word.Word]:
         name_lower = q.lower().replace("'", "''")
-        res = self.search(columns=["id", "word", "part", "english", "chinese", "eg"],
+        res = self.search(columns=["id", "word", "part", "english", "chinese", "eg", "box"],
                           table="Word",
                           where=f"LOWER(word)='{name_lower}'")
-        if res is None:
-            res = []
-        if len(res) <= 0:
+        if res is None or len(res) <= 0:
             if search:
                 return self.__add_word(q, add)
             return None

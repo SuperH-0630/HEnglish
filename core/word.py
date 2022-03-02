@@ -143,13 +143,20 @@ class Word:
         def __str__(self):
             return f"{self.part} {self.english} {self.chinese} \neg: {self.eg}"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, box: int = 1):
         self.name = name
         self.comment: Dict[str: "Word.Comment"] = {}  # 注释
+        if box < 1 or box > 5:
+            box = 1
+        self.box = box
 
     def add_comment(self, c: Comment):
         if self.comment.get(c.english) is None:
             self.comment[c.english] = c
+
+    def set_box(self, box: int):
+        if 0 < box < 6:
+            self.box = box
 
     def __str__(self):
         ret = f"{self.name}:\n"
