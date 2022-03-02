@@ -147,19 +147,19 @@
 
                     <div class="col-12 col-lg-6 offset-lg-3 text-left">
                         <p class="h4 mb-2 col-12"> User: {{ current_user.user }} </p>
-                        <p class="col-12"> You have {{ box_sum }} word(s) in database. </p>
+                        <p class="col-12"> You have {{ box_sum_distinct }}({{ box_sum }}) word(s) in database. </p>
 
                         <div class="col-12 text-center mb-2">
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=1) }}" >
-                                <span class="small"> Box1: {{ box[0] }} </span> </a>
+                                <span class="small"> Box1: {{ box_distinct[0] }} ({{ box[0] }}) </span> </a>
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=2) }}">
-                                <span class="small"> Box2: {{ box[1] }} </span> </a>
+                                <span class="small"> Box2: {{ box_distinct[1] }} ({{ box[1] }}) </span> </a>
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=3) }}">
-                                <span class="small"> Box3: {{ box[2] }} </span> </a>
+                                <span class="small"> Box3: {{ box_distinct[2] }} ({{ box[2] }}) </span> </a>
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=4) }}">
-                                <span class="small"> Box4: {{ box[3] }} </span> </a>
+                                <span class="small"> Box4: {{ box_distinct[3] }} ({{ box[3] }}) </span> </a>
                             <a class="btn btn-light mb-2" href="{{ url_for("word_list.show_box_word", box=5) }}">
-                                <span class="small"> Box5: {{ box[4] }} </span> </a>
+                                <span class="small"> Box5: {{ box_distinct[4] }} ({{ box[4] }}) </span> </a>
                         </div>
 
                         <a class="col-12 btn btn-primary mb-2" href="{{ url_for("word_list.show_all_word") }}"> Word List </a>

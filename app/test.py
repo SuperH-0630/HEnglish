@@ -36,7 +36,7 @@ class UploadFile(FlaskForm):
 
 def __load_word(word):
     user: UserWordDataBase = current_user
-    box, box_sum = user.get_box_count()
+    box, box_distinct, box_sum, box_sum_distinct = user.get_box_count()
     search_from = SearchForm()
     reset_delete_form = ResetDeleteForm()
     upload_form = UploadFile()
@@ -52,8 +52,8 @@ def __load_word(word):
         have_job = False
 
     template_var = dict(word=word, len=len,
-                        box=box, box_sum=box_sum, have_job=have_job,
-                        search=search_from, reset_delete=reset_delete_form, upload=upload_form)
+                        box=box, box_distinct=box_distinct, box_sum=box_sum, box_sum_distinct=box_sum_distinct,
+                        have_job=have_job, search=search_from, reset_delete=reset_delete_form, upload=upload_form)
     if word is None:
         return render_template("test.html", **template_var, have_word=False)
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])

@@ -38,12 +38,15 @@ class UserWordDataBase(WordDatabase, UserMixin):
     def delete_user(self):
         self.delete_self()
 
-    def get_box_count(self) -> Tuple[list, int]:
-        res = self.search(columns=["COUNT(id)", "box"], table="Word", group_by=["box"])
+    def get_box_count(self) -> Tuple[list, list, int, int]:
+        res = self.search(columns=["COUNT(word)", "COUNT(DISTINCT word)", "box"], table="Word", group_by=["box"])
+        print(res)
         ret = [0, 0, 0, 0, 0]
+        ret_distinct = [0, 0, 0, 0, 0]
         for i in res:
-            ret[i[1] - 1] = i[0]
-        return ret, sum(ret)
+            ret[i[2] - 1] = i[0]
+            ret_distinct[i[2] - 1] = i[1]
+        return ret, ret_distinct, sum(ret), sum(ret_distinct)
 
     def reset(self):
         self.update(table="Word", kw={"box": "1"}, where="1")
