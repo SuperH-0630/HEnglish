@@ -21,8 +21,11 @@ class HEnglishFlask(Flask):
                               "WARNING": logging.WARNING,
                               "ERROR": logging.ERROR}.get(configure.conf["LOG_LEVEL"], logging.INFO))
         if len(configure.conf["LOG_HOME"]):
-            handle = logging.handlers.TimedRotatingFileHandler(
-                os.path.join(configure.conf["LOG_HOME"], f"flask-{os.getpid()}.log"))
+            if configure.conf["LOG_FILE_NAME_PID"]:
+                log_file_name = os.path.join(configure.conf["LOG_HOME"], f"flask-{os.getpid()}.log")
+            else:
+                log_file_name = os.path.join(configure.conf["LOG_HOME"], "flask.log")
+            handle = logging.handlers.TimedRotatingFileHandler(log_file_name)
             handle.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(asctime)s "
                                                   "(%(filename)s:%(lineno)d %(funcName)s) "
                                                   "%(process)d %(thread)d "

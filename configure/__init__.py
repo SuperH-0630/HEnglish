@@ -13,6 +13,7 @@ conf = {
     "LOG_LEVEL": "DEBUG",
     "SERVER_NAME": None,
     "MAX_CONTENT_LENGTH": 5 * 1024 * 1024,
+    "LOG_FILE_NAME_PID": False
 }
 
 
