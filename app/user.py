@@ -17,23 +17,35 @@ class UserWordDataBase(WordDatabase, UserMixin):
         self.done(f'''
                 CREATE TABLE IF NOT EXISTS User (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 记录ID
-                    passwd TEXT NOT NULL  -- 密码hash
+                    key INTEGER UNIQUE NOT NULL,
+                    value TEXT NOT NULL  -- 密码hash
                 )''')
-        if self.search(columns=["COUNT(ID)"], table="User")[0][0] == 0:
-            self.insert(table="User", columns=["passwd"], values=f"'{generate_password_hash('88888888')}'")  # 默认密码
+        if len(self.search(table="User", columns=["value"], where="key=1")) == 0:
+            self.insert(table="User", columns=["key", "value"],
+                        values=f"1, '{generate_password_hash('88888888')}'")  # 默认密码
         self.user = user
 
     def get_id(self):
         return self.user
 
-    def check_passwd(self, passwd: str) -> bool:
-        res = self.search(table="User", columns=["passwd"], limit=1, order_by=[("ID", "ASC")])
-        if len(res) == 0:
-            return False
-        return check_password_hash(res[0][0], passwd)
+    def set_value(self, key: int, value):
+        value = str(value).replace("'", "''")
+        self.update(table="User", kw={"value": f"'{value}'"}, where=f"key={key}")
 
-    def set_passwd(self, passwd: str, record_id: int = 1):
-        self.update(table="User", kw={"passwd": f"'{generate_password_hash(passwd)}'"}, where=f"id={record_id}")
+    def get_value(self, key: int, default=None):
+        res = self.search(table="User", columns=["value"], where=f"key={key}")
+        if len(res) == 0:
+            return default
+        return res[0][0]
+
+    def check_passwd(self, passwd: str) -> bool:
+        res = self.get_value(1)
+        if res is None:
+            return False
+        return check_password_hash(res, passwd)
+
+    def set_passwd(self, passwd: str):
+        self.set_value(1, generate_password_hash(passwd))
 
     def delete_user(self):
         self.delete_self()
