@@ -147,6 +147,11 @@
                     <div class="col-12 col-lg-6 offset-lg-3 text-left">
                         <p class="h4 mb-2 col-12"> User: {{ current_user.user }} </p>
                         <p class="col-12"> You have {{ box_sum_distinct }}({{ box_sum }}) word(s) in database. </p>
+                        <p class="col-12">
+                            Today, you have feedback {{ right_count + wrong_count }} word. <br>
+                            Right: {{ right_count }}, Wrong: {{ wrong_count }}. <br>
+                            Last word is '{{ history[-1] }}'.
+                        </p>
 
                         <div class="col-12 text-center mb-2">
                             <a class="btn btn-light mr-2 mb-2" href="{{ url_for("word_list.show_box_word", box=1) }}" >

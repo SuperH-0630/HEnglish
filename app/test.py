@@ -37,6 +37,7 @@ class UploadFile(FlaskForm):
 def __load_word(word):
     user: UserWordDataBase = current_user
     box, box_distinct, box_sum, box_sum_distinct = user.get_box_count()
+    right_count, wrong_count, history = user.get_history_info()
     search_from = SearchForm()
     reset_delete_form = ResetDeleteForm()
     upload_form = UploadFile()
@@ -51,7 +52,7 @@ def __load_word(word):
     else:
         have_job = False
 
-    template_var = dict(word=word, len=len,
+    template_var = dict(word=word, len=len, right_count=right_count, wrong_count=wrong_count, history=history,
                         box=box, box_distinct=box_distinct, box_sum=box_sum, box_sum_distinct=box_sum_distinct,
                         have_job=have_job, search=search_from, reset_delete=reset_delete_form, upload=upload_form)
     if word is None:
