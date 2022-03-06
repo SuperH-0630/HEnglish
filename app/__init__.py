@@ -1,1 +1,1 @@
-from app.app import *
+from app.app import HEnglishFlask
