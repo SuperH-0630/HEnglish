@@ -65,16 +65,21 @@ class UserWordDataBase(WordDatabase, UserMixin):
             self.set_value(4, 0)
             self.set_value(5, "")
 
+    def rand_word(self):
+        w = super(UserWordDataBase, self).rand_word()
+        if w is None:
+            return None
+        self.__add_history_word(w.name)
+        return w
+
     def right_word(self, w: str):
         self.check_time()
         self.set_value(3, int(self.get_value(3, 0)) + 1)
-        self.__add_history_word(w)
         return super(UserWordDataBase, self).right_word(w)
 
     def wrong_word(self, w: str):
         self.check_time()
         self.set_value(4, int(self.get_value(4, 0)) + 1)
-        self.__add_history_word(w)
         return super(UserWordDataBase, self).wrong_word(w)
 
     def __add_history_word(self, w):
@@ -100,7 +105,11 @@ class UserWordDataBase(WordDatabase, UserMixin):
         self.check_time()
         right = int(self.get_value(3))
         wrong = int(self.get_value(4))
-        history = self.get_value(5, "").split(",")
+        history = self.get_value(5, "")
+        if len(history) == 0:
+            history = []
+        else:
+            history = self.get_value(5, "").split(",")[::-1]
         return right, wrong, history
 
     def reset(self):

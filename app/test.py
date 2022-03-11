@@ -40,7 +40,7 @@ class UploadFileForm(FlaskForm):
 def __load_word(word, search_from: SearchForm, reset_delete_form: ResetDeleteForm, upload_form: UploadFileForm):
     user: UserWordDataBase = current_user
     box, box_distinct, box_sum, box_sum_distinct = user.get_box_count()
-    right_count, wrong_count, history = user.get_history_info()
+    right_count, wrong_count, history_list = user.get_history_info()
     job: Upload = Upload.upload.get(user.user)
     if Upload.upload.get(user.user) is not None:
         if job.is_alive():
@@ -52,6 +52,13 @@ def __load_word(word, search_from: SearchForm, reset_delete_form: ResetDeleteFor
     else:
         have_job = False
 
+    history_len = len(history_list)
+    if history_len == 0:
+        history = ""
+    else:
+        if history_len > 3:
+            history_list = history_list[:3]
+        history = f"Last word is: {', '.join(history_list)}"
     template_var = dict(word=word, len=len, right_count=right_count, wrong_count=wrong_count, history=history,
                         box=box, box_distinct=box_distinct, box_sum=box_sum, box_sum_distinct=box_sum_distinct,
                         have_job=have_job, search=search_from, reset_delete=reset_delete_form, upload=upload_form)

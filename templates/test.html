@@ -139,8 +139,9 @@
                         <p class="col-12"> You have {{ box_sum_distinct }}({{ box_sum }}) word(s) in database. </p>
                         <p class="col-12">
                             Today, you have feedback {{ right_count + wrong_count }} word. <br>
-                            Right: {{ right_count }}, Wrong: {{ wrong_count }}. <br>
-                            Last word is '{{ history[-1] }}'.
+                            Right: {{ right_count }} <br>
+                            Wrong: {{ wrong_count }} <br>
+                            {{ history }}
                         </p>
 
                         <div class="col-12 text-center mb-2">
