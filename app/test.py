@@ -139,15 +139,8 @@ def download(word: str):
     w = user.find_word(word, False)
     if w is None:
         abort(404)
-    w_str = f"{w.name}\n"
-    for i in w.comment:
-        comment = w.comment[i]
-        w_str += f"  {comment.part}\n  {comment.english}\n  {comment.chinese}\n"
-        for a in comment.eg:
-            e, c = a.split("##")
-            w_str += f"    {e}\n    {c}\n"
-    response = make_response(w_str)
-    response.headers["Content-Disposition"] = f"attachment;filename={word}.henglish.txt"
+    response = make_response(render_template("download.html", w=w))
+    response.headers["Content-Disposition"] = f"attachment;filename={word}.html"
     return response
 
 

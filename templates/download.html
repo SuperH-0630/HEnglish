@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> {{ w.name }} - HEnglish </title>
+</head>
+<body>
+    <h1> {{ w.name }} <small> (box: {{ w.box }}) </small> </h1>
+    {% for c in w.comment %}
+        <h2> {{ w.comment[c].chinese }} </h2>
+        <h3> English: {{ w.comment[c].english }} </h3>
+        <h4> Part: {{ w.comment[c].part }} </h4>
+        <div class="eg">
+            <ul>
+                {% for e in w.comment[c].eg %}
+                    <li>
+                        <p> {{ e.split("##")[0] }} </p>
+                        <p> {{ e.split("##")[1] }} </p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+</body>
+</html>
