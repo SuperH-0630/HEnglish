@@ -60,7 +60,7 @@ def login():
         flash(f"You are login as {current_user.user}")
         abort(304)
 
-    login_form: LoginForm = g["form"]
+    login_form: LoginForm = g.form
     user = load_user(login_form.name.data, login_form.passwd.data)
     if user is not None:
         login_user(user, login_form.remember.data)
@@ -83,7 +83,7 @@ def register():
         flash(f"You are login as {current_user.user}")
         abort(304)
 
-    register_form: RegisterForm = g["form"]
+    register_form: RegisterForm = g.form
     flat, user = create_user(register_form.template.data, register_form.name.data, register_form.passwd.data)
     if user is not None:
         current_app.logger.debug(f"{register_form.name.data} with {register_form.template.data} register success")

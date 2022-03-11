@@ -224,7 +224,7 @@ def download_table(file_type: str):
 @form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def reset_user():
     user: UserWordDataBase = current_user
-    if not user.check_passwd(g["form"].passwd.data):
+    if not user.check_passwd(g.form.passwd.data):
         flash("Passwd error.")
     else:
         flash("User reset")
@@ -236,7 +236,7 @@ def reset_user():
 @login_required
 @form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def delete_user():
-    delete_form: ResetDeleteForm = g["form"]
+    delete_form: ResetDeleteForm = g.form
     user: UserWordDataBase = current_user
     if not user.check_passwd(delete_form.passwd.data):
         flash("Passwd error.")
@@ -251,7 +251,7 @@ def delete_user():
 @login_required
 @form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def reset_passwd():
-    reset_form: ResetDeleteForm = g["form"]
+    reset_form: ResetDeleteForm = g.form
     if len(reset_form.new_passwd.data) < 4 or len(reset_form.new_passwd.data) > 32:
         flash("Please enter a password of length 4-32")
     else:
