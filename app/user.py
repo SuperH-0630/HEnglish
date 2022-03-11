@@ -143,6 +143,10 @@ def create_user(template: str, name: str, passwd: str):
     return 1, user
 
 
+def have_user(name: str):
+    return os.path.exists(os.path.join(conf["DB_PATH"], f"{name}.db"))
+
+
 def load_user(name: str, passwd: Optional[str]):
     if not os.path.exists(os.path.join(conf["DB_PATH"], f"{name}.db")):
         return None

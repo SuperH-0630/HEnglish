@@ -10,19 +10,11 @@
 
             <div id="authContent" class="tab-content">
                 <div class="tab-pane fade" id="login">
-                    <div class="col-12 col-lg-6 offset-lg-3">
+                    <div class="col-12 col-lg-6 offset-lg-3 text-left">
                         <form method="post" action="{{ url_for("home.login") }}">
                             {{ login_form.hidden_tag() }}
-
-                            <div class="form-group text-left">
-                                {{ login_form.name.label }}
-                                {{ login_form.name(class="form-control") }}
-                            </div>
-
-                            <div class="form-group text-left">
-                                {{ login_form.passwd.label }}
-                                {{ login_form.passwd(class="form-control") }}
-                            </div>
+                            {{ macro.render_field(login_form.name) }}
+                            {{ macro.render_field(login_form.passwd) }}
 
                             <div class="text-left">
                                 {{ login_form.submit(class='btn btn-info mr-2') }}
@@ -32,29 +24,13 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="register">
-                    <div class="col-12 col-lg-6 offset-lg-3">
+                    <div class="col-12 col-lg-6 offset-lg-3 text-left">
                         <form method="post" action="{{ url_for("home.register") }}">
                             {{ register_form.hidden_tag() }}
-
-                            <div class="form-group text-left">
-                                {{ register_form.name.label }}
-                                {{ register_form.name(class="form-control") }}
-                            </div>
-
-                            <div class="form-group text-left">
-                                {{ register_form.template.label }}
-                                {{ register_form.template(class="form-control") }}
-                            </div>
-
-                            <div class="form-group text-left">
-                                {{ register_form.passwd.label }}
-                                {{ register_form.passwd(class="form-control") }}
-                            </div>
-
-                            <div class="form-group text-left">
-                                {{ register_form.passwd_again.label }}
-                                {{ register_form.passwd_again(class="form-control") }}
-                            </div>
+                            {{ macro.render_field(register_form.name) }}
+                            {{ macro.render_field(register_form.template) }}
+                            {{ macro.render_field(register_form.passwd) }}
+                            {{ macro.render_field(register_form.passwd_again) }}
 
                             <div class="text-left">
                                 {{ register_form.submit(class='btn btn-info mr-2') }}

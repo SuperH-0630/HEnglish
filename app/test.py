@@ -1,9 +1,9 @@
-from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response, request
+from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response, request, g
 from flask import send_file
 from flask_login import current_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, PasswordField, FileField
-from wtforms.validators import DataRequired
+from wtforms import SearchField, SubmitField, BooleanField, PasswordField, FileField
+from wtforms.validators import DataRequired, Length
 from app.user import UserWordDataBase
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadData
@@ -11,36 +11,36 @@ from threading import Thread
 from typing import Optional, List
 from core.word import Word
 import io
+from app.tool import AuthForm, form_required
 
 test = blueprints.Blueprint("test", __name__)
 
 
 class SearchForm(FlaskForm):
-    search = StringField("Word", validators=[DataRequired()])
+    search = SearchField("Word", description="Search word",
+                         validators=[DataRequired(message="Must enter word"),
+                                     Length(1, 20, message="Length: 1- 20")])
     from_internet = BooleanField("Internet")
     add_to_db = BooleanField("Add")
     submit = SubmitField("Search")
 
 
-class ResetDeleteForm(FlaskForm):
-    name = StringField("User name", validators=[DataRequired()])
-    passwd = PasswordField("Passwd", validators=[DataRequired()])
-    new_passwd = PasswordField("New passwd")
+class ResetDeleteForm(AuthForm):
+    new_passwd = PasswordField("New Password", description="new password",
+                               validators=[DataRequired(message="Must enter new password"),
+                                           Length(4, 32, "Length: 4 - 32")])
     submit = SubmitField("Submit")
 
 
-class UploadFile(FlaskForm):
-    file = FileField("File")
+class UploadFileForm(FlaskForm):
+    file = FileField("File", description="Upload file", validators=[DataRequired("Must upload file")])
     submit = SubmitField("Upload")
 
 
-def __load_word(word):
+def __load_word(word, search_from: SearchForm, reset_delete_form: ResetDeleteForm, upload_form: UploadFileForm):
     user: UserWordDataBase = current_user
     box, box_distinct, box_sum, box_sum_distinct = user.get_box_count()
     right_count, wrong_count, history = user.get_history_info()
-    search_from = SearchForm()
-    reset_delete_form = ResetDeleteForm()
-    upload_form = UploadFile()
     job: Upload = Upload.upload.get(user.user)
     if Upload.upload.get(user.user) is not None:
         if job.is_alive():
@@ -62,11 +62,15 @@ def __load_word(word):
     return render_template("test.html", **template_var, word_id=word_id, have_word=True)
 
 
+def __load_question(search_from: SearchForm, reset_delete_form: ResetDeleteForm, upload_form: UploadFileForm):
+    word = current_user.rand_word()
+    return __load_word(word, search_from, reset_delete_form, upload_form)
+
+
 @test.route("/")
 @login_required
 def question():
-    word = current_user.rand_word()
-    return __load_word(word)
+    return __load_question(SearchForm(), ResetDeleteForm(), UploadFileForm())
 
 
 @test.route("/right/<string:word_id>")
@@ -152,6 +156,8 @@ class Search(Thread):
 def search():
     form = SearchForm()
     if not form.validate_on_submit():
+        if request.method == "POST":
+            return __load_question(form, ResetDeleteForm(), UploadFileForm())
         word = request.args.get("word", "")
         if len(word) == 0:
             abort(400)
@@ -161,7 +167,7 @@ def search():
         word = th.wait_event()
         if th.is_alive():
             flash("Search timeout")
-        return __load_word(word)
+        return __load_word(word, SearchForm(), ResetDeleteForm(), UploadFileForm())
     return redirect(url_for("test.search",
                             word=form.search.data, internet=int(form.from_internet.data), add=int(form.add_to_db.data)))
 
@@ -204,53 +210,49 @@ def download_table(file_type: str):
 
 @test.route("/reset/user", methods=["POST"])
 @login_required
+@form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def reset_user():
-    reset_form = ResetDeleteForm()
-    if reset_form.validate_on_submit():
-        user: UserWordDataBase = current_user
-        if not user.check_passwd(reset_form.passwd.data):
-            flash("Passwd error.")
-        else:
-            flash("User reset")
-            user.reset()
-        return redirect(url_for("test.question"))
-    abort(400)
+    user: UserWordDataBase = current_user
+    if not user.check_passwd(g.form.passwd.data):
+        flash("Passwd error.")
+    else:
+        flash("User reset")
+        user.reset()
+    return redirect(url_for("test.question"))
 
 
 @test.route("/delete/user", methods=["POST"])
 @login_required
+@form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def delete_user():
-    delete_form = ResetDeleteForm()
-    if delete_form.validate_on_submit():
-        user: UserWordDataBase = current_user
-        if not user.check_passwd(delete_form.passwd.data):
-            flash("Passwd error.")
-        else:
-            flash("User reset")
-            logout_user()
-            user.delete_user()
-        return redirect(url_for("test.question"))
-    abort(400)
+    delete_form: ResetDeleteForm = g.form
+    user: UserWordDataBase = current_user
+    if not user.check_passwd(delete_form.passwd.data):
+        flash("Passwd error.")
+    else:
+        flash("User reset")
+        logout_user()
+        user.delete_user()
+    return redirect(url_for("test.question"))
 
 
 @test.route("/reset/passwd", methods=["POST"])
 @login_required
+@form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def reset_passwd():
-    reset_form = ResetDeleteForm()
-    if reset_form.validate_on_submit():
-        if len(reset_form.new_passwd.data) < 4 or len(reset_form.new_passwd.data) > 32:
-            flash("Please enter a password of length 4-32")
+    reset_form: ResetDeleteForm = g.form
+    if len(reset_form.new_passwd.data) < 4 or len(reset_form.new_passwd.data) > 32:
+        flash("Please enter a password of length 4-32")
+    else:
+        user: UserWordDataBase = current_user
+        if not user.check_passwd(reset_form.passwd.data):
+            flash("Passwd error.")
         else:
-            user: UserWordDataBase = current_user
-            if not user.check_passwd(reset_form.passwd.data):
-                flash("Passwd error.")
-            else:
-                flash("User passwd reset")
-                user.set_passwd(reset_form.new_passwd.data)
-                logout_user()
-                return redirect(url_for("home.index"))
-        return redirect(url_for("test.question"))
-    abort(400)
+            flash("User passwd reset")
+            user.set_passwd(reset_form.new_passwd.data)
+            logout_user()
+            return redirect(url_for("home.index"))
+    return redirect(url_for("test.question"))
 
 
 class Upload(Thread):
@@ -270,6 +272,7 @@ class Upload(Thread):
 
 @test.route("/upload", methods=["POST"])
 @login_required
+@form_required(UploadFileForm, lambda form: __load_question(SearchForm(), ResetDeleteForm(), form))
 def upload():
     file = request.files["file"]
     user = current_user._get_current_object()
