@@ -47,7 +47,8 @@ class HEnglishFlask(Flask):
         @self.context_processor
         def inject_base():
             return {"title": self.config["TITLE"],
-                    "about": self.config["ABOUT"]}
+                    "about": self.config["ABOUT"],
+                    "footer": self.config["FOOTER"]}
 
         @self.login_manager.user_loader
         def user_loader(name: str):

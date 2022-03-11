@@ -5,6 +5,7 @@ root = os.path.abspath(os.path.join(__file__, '..', '..'))
 conf = {
     "SECRET_KEY": "HEnglish",
     "TITLE": "HEnglish :D",
+    "FOOTER": "Power by HEnglish",
     "ABOUT": "An useful English learning website for personal.",
     "DB_TEMPLATE": f"{os.path.join(root, 'resource', 'template')}",
     "DB_PATH": f"{os.path.join(root, 'var', 'db')}",
@@ -13,7 +14,7 @@ conf = {
     "LOG_LEVEL": "DEBUG",
     "SERVER_NAME": None,
     "MAX_CONTENT_LENGTH": 5 * 1024 * 1024,
-    "LOG_FILE_NAME_PID": False
+    "LOG_FILE_NAME_PID": False,
 }
 
 
