@@ -1,4 +1,5 @@
-from flask import blueprints, render_template, current_app, abort, redirect, url_for, flash, make_response, request, g
+from flask import (blueprints, render_template, current_app,
+                   abort, redirect, url_for, flash, make_response, request, g, session)
 from flask import send_file
 from flask_login import current_user, login_required, logout_user
 from flask_wtf import FlaskForm
@@ -65,8 +66,8 @@ def __load_word(word, search_from: SearchForm, reset_delete_form: ResetDeleteFor
     if word is None:
         return render_template("test.html", **template_var, have_word=False)
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
-    word_id = serializer.dumps({"word": word.name})
-    return render_template("test.html", **template_var, word_id=word_id, have_word=True)
+    session["word"] = serializer.dumps({"word": word.name})
+    return render_template("test.html", **template_var, have_word=True)
 
 
 def __load_question(search_from: SearchForm, reset_delete_form: ResetDeleteForm, upload_form: UploadFileForm):
@@ -80,12 +81,17 @@ def question():
     return __load_question(SearchForm(), ResetDeleteForm(), UploadFileForm())
 
 
-@test.route("/right/<string:word_id>")
+@test.route("/right")
 @login_required
-def right(word_id: str):
+def right():
+    word_id = session.get("word", "")
+    session["word"] = ""
+    if len(word_id) == 0:
+        abort(404)
+
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
-        word: dict = serializer.loads(word_id, max_age=120)  # 120s内生效
+        word: dict = serializer.loads(word_id, max_age=600)  # 600s内生效
         user: UserWordDataBase = current_user
         user.right_word(word["word"])
     except BadData:
@@ -96,12 +102,17 @@ def right(word_id: str):
     return redirect(url_for("test.question"))
 
 
-@test.route("/wrong/<string:word_id>")
+@test.route("/wrong")
 @login_required
-def wrong(word_id: str):
+def wrong():
+    word_id = session.get("word", "")
+    session["word"] = ""
+    if len(word_id) == 0:
+        abort(404)
+
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
-        word: dict = serializer.loads(word_id, max_age=120)  # 120s内生效
+        word: dict = serializer.loads(word_id, max_age=600)  # 600s内生效
         user: UserWordDataBase = current_user
         user.wrong_word(word["word"])
     except BadData:
@@ -220,7 +231,7 @@ def download_table(file_type: str):
 @form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def reset_user():
     user: UserWordDataBase = current_user
-    if not user.check_passwd(g.form.passwd.data):
+    if not user.check_passwd(g["form"].passwd.data):
         flash("Passwd error.")
     else:
         flash("User reset")
@@ -232,7 +243,7 @@ def reset_user():
 @login_required
 @form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def delete_user():
-    delete_form: ResetDeleteForm = g.form
+    delete_form: ResetDeleteForm = g["form"]
     user: UserWordDataBase = current_user
     if not user.check_passwd(delete_form.passwd.data):
         flash("Passwd error.")
@@ -247,7 +258,7 @@ def delete_user():
 @login_required
 @form_required(ResetDeleteForm, lambda form: __load_question(SearchForm(), form, UploadFileForm()))
 def reset_passwd():
-    reset_form: ResetDeleteForm = g.form
+    reset_form: ResetDeleteForm = g["form"]
     if len(reset_form.new_passwd.data) < 4 or len(reset_form.new_passwd.data) > 32:
         flash("Please enter a password of length 4-32")
     else:

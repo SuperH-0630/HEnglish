@@ -85,8 +85,8 @@
                                 <a class="btn btn-dark mr-2 mb-2" href="{{ url_for("test.question") }}"> Next word </a>
                                 <a class="btn btn-light mr-2 mb-2" href="{{ url_for("test.download", word=word.name) }}"> Download word </a>
                                 <a class="btn btn-outline-danger mr-2 mb-2" data-toggle="modal" data-target="#DeleteModal" > Delete word </a>
-                                <a class="btn btn-success mr-2 mb-2" href="{{ url_for("test.right", word_id=word_id) }}"> Right </a>
-                                <a class="btn btn-danger mr-2 mb-2" href="{{ url_for("test.wrong", word_id=word_id) }}" > Wrong </a>
+                                <a class="btn btn-success mr-2 mb-2" href="{{ url_for("test.right") }}"> Right </a>
+                                <a class="btn btn-danger mr-2 mb-2" href="{{ url_for("test.wrong") }}" > Wrong </a>
                             </div>
                         </div>
                     </div>
