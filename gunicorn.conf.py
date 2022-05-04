@@ -12,7 +12,7 @@ workers = multiprocessing.cpu_count() * 2 + 1  # 进程数
 threads = 2  # 指定每个进程开启的线程数
 
 henglish_path = os.path.join(os.environ['HOME'], "henglish")
-os.makedirs(henglish_path, exist_ok=True, mode=0o775)
+os.makedirs(os.path.join(henglish_path, "log"), exist_ok=True, mode=0o775)
 
 # 设置访问日志和错误信息日志路径
 log_format = ("%(levelname)s:%(name)s:%(asctime)s "

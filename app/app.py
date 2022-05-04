@@ -7,6 +7,7 @@ import logging.handlers
 import logging
 import os
 import sys
+import random
 
 
 class HEnglishFlask(Flask):
@@ -64,6 +65,13 @@ class HEnglishFlask(Flask):
         self.register_blueprint(test.test, url_prefix="/study")
         self.register_blueprint(word_list.word_list, url_prefix="/word")
 
+        self.invite_passwd: str = ""
+        self.new_invite_passwd()
+
     def update_config(self):
         self.config.update(configure.conf)
         self.logger.info("Update config")
+
+    def new_invite_passwd(self):
+        self.invite_passwd = "HEnglish-" + str(random.randint(100000, 999999))
+        return self.invite_passwd

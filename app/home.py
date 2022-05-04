@@ -2,6 +2,8 @@ from flask import blueprints, url_for, request, redirect, render_template, flash
 from flask_login import login_user, current_user, login_required, logout_user
 from wtforms import PasswordField, BooleanField, SubmitField, SelectField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
+
+import configure
 from app.user import load_user, create_user, check_template, get_template, have_user
 from app.tool import form_required, AuthForm
 
@@ -24,6 +26,7 @@ class RegisterForm(AuthForm):
     passwd_again = PasswordField("Passwd again",
                                  validators=[DataRequired(message="Must enter password again"),
                                              EqualTo("passwd", message="The password entered twice is different")])
+    invite_passwd = PasswordField("Invite passwd")
     submit = SubmitField("register")
 
     def __init__(self):
@@ -84,6 +87,11 @@ def register():
         abort(304)
 
     register_form: RegisterForm = g.form
+    if current_app.invite_passwd != register_form.invite_passwd.data:
+        flash("Register without invite")
+        return redirect(url_for("home.index"))
+
+    current_app.new_invite_passwd()
     flat, user = create_user(register_form.template.data, register_form.name.data, register_form.passwd.data)
     if user is not None:
         current_app.logger.debug(f"{register_form.name.data} with {register_form.template.data} register success")
@@ -101,3 +109,11 @@ def logout():
     logout_user()
     flash("User logout")
     return redirect(url_for("home.index"))
+
+
+@home.route('/invite/<string:url>')
+def invite(url: str):
+    if url != configure.conf["INVITE_URL"]:
+        return abort(404)
+    return render_template("invite.html", invite_passwd=current_app.invite_passwd)
+
