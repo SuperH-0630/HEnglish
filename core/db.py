@@ -139,7 +139,8 @@ class WordDatabase(DataBase):
             part TEXT NOT NULL,  -- 词性
             english TEXT NOT NULL,  -- 英文注释
             chinese TEXT NOT NULL,  -- 中文注释
-            eg TEXT  -- 例句
+            eg TEXT,  -- 例句
+            mp3 TEXT  -- mp3 单词音频
         )''')
         self.wd = word.WordDict()
 
@@ -153,6 +154,7 @@ class WordDatabase(DataBase):
             if ret is None:
                 ret = w
             name = w.name
+            mp3 = w.mp3
             name_lower = name.lower().replace("'", "''")
             res = self.search(columns=["word"], table="Word", where=f"LOWER(word)='{name_lower}'")
             if res is not None and len(res) > 0:
@@ -165,14 +167,14 @@ class WordDatabase(DataBase):
                 chinese = comment.chinese.replace("'", "''")
                 if add:
                     self.insert(table='Word',
-                                columns=['word', 'part', 'english', 'chinese', 'eg'],
-                                values=f"'{name_lower}', '{part}', '{english}', '{chinese}', '{eg} '")
+                                columns=['word', 'part', 'english', 'chinese', 'eg', 'mp3'],
+                                values=f"'{name_lower}', '{part}', '{english}', '{chinese}', '{eg}', '{mp3}'")
                 self.__logger.info(f"Add word name: {name_lower} part: {part}")
         return ret
 
     @staticmethod
     def __make_word(q: str, res: list):
-        w = word.Word(q)
+        w = word.Word(q, res[0][7])
         box = 6
         for i in res:
             c = word.Word.Comment(i[2], i[3], i[4])
@@ -185,7 +187,7 @@ class WordDatabase(DataBase):
 
     def find_word(self, q: str, search: bool = True, add: bool = True) -> Optional[word.Word]:
         name_lower = q.lower().replace("'", "''")
-        res = self.search(columns=["id", "word", "part", "english", "chinese", "eg", "box"],
+        res = self.search(columns=["id", "word", "part", "english", "chinese", "eg", "box", "mp3"],
                           table="Word",
                           where=f"LOWER(word)='{name_lower}'")
         if res is None or len(res) <= 0:

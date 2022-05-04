@@ -1,5 +1,4 @@
 import configure
-import app as App
 import os
 import logging
 
@@ -10,5 +9,7 @@ if henglish_conf is not None:
     logging.info(f"Configure file {henglish_conf}")
     configure.configure(henglish_conf, encoding="utf-8")
 
+
+import app as App
 
 app = App.HEnglishFlask(__name__)

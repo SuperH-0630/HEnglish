@@ -9,6 +9,7 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional, Dict
+from core.aliyun import tls
 
 
 class WordDict:
@@ -90,7 +91,10 @@ class Response:
 
             word = self.res.get(name_string)
             if word is None:
-                word = Word(name_string)
+                tls_res = tls.start(name_string)
+                if not tls_res.success:
+                    continue
+                word = Word(name_string, tls_res.mp3)
                 self.res[name_string] = word
 
             h = i.find(name="div", attrs={"class": "ddef_h"})
@@ -143,12 +147,13 @@ class Word:
         def __str__(self):
             return f"{self.part} {self.english} {self.chinese} \neg: {self.eg}"
 
-    def __init__(self, name: str, box: int = 1):
+    def __init__(self, name: str, mp3: str, box: int = 1):
         self.name = name
         self.comment: Dict[str: "Word.Comment"] = {}  # 注释
         if box < 1 or box > 5:
             box = 1
         self.box = box
+        self.mp3 = mp3
 
     def add_comment(self, c: Comment):
         if self.comment.get(c.english) is None:

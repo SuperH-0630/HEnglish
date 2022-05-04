@@ -12,17 +12,16 @@ home = blueprints.Blueprint("home", __name__)
 
 
 class LoginForm(AuthForm):
-    remember = BooleanField("Remember me")
+    remember = BooleanField("Remember me", default=True)
     submit = SubmitField("Login")
 
     def __init__(self):
         super(LoginForm, self).__init__()
-        self.remember.data = True
 
 
 class RegisterForm(AuthForm):
     template = SelectField("Template", choices=get_template(), coerce=str,
-                           validators=[DataRequired(message="Template must be selected")])
+                           validators=[DataRequired(message="Template must be selected")], default="base")
     passwd_again = PasswordField("Passwd again",
                                  validators=[DataRequired(message="Must enter password again"),
                                              EqualTo("passwd", message="The password entered twice is different")])
@@ -31,7 +30,6 @@ class RegisterForm(AuthForm):
 
     def __init__(self):
         super(RegisterForm, self).__init__()
-        self.template.data = "base"
 
     def validate_name(self, field):
         if have_user(field.data):
@@ -92,6 +90,7 @@ def register():
         return redirect(url_for("home.index"))
 
     current_app.new_invite_passwd()
+    print(register_form.template.data)
     flat, user = create_user(register_form.template.data, register_form.name.data, register_form.passwd.data)
     if user is not None:
         current_app.logger.debug(f"{register_form.name.data} with {register_form.template.data} register success")
