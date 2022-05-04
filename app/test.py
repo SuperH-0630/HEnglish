@@ -28,8 +28,7 @@ class SearchForm(FlaskForm):
 
 class ResetDeleteForm(AuthForm):
     new_passwd = PasswordField("New Password", description="new password",
-                               validators=[DataRequired(message="Must enter new password"),
-                                           Length(4, 32, "Length: 4 - 32")])
+                               validators=[Length(0, 32, "Length: 0 - 32")])
     submit = SubmitField("Submit")
 
 
@@ -241,9 +240,10 @@ def delete_user():
     if not user.check_passwd(delete_form.passwd.data):
         flash("Passwd error.")
     else:
-        flash("User reset")
-        logout_user()
+        flash("User delete")
         user.delete_user()
+        logout_user()
+        return redirect(url_for("home.index"))
     return redirect(url_for("test.question"))
 
 

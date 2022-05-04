@@ -336,7 +336,6 @@ class WordDatabase(DataBase):
         count = 0
         while count == 0:
             if box == 5:
-                print()
                 return None
             box += 1
             count = self.search(columns=["COUNT(DISTINCT word)"], table="Word", where=f"box<={box}")[0][0]
