@@ -197,6 +197,14 @@ class WordDatabase(DataBase):
         self.__logger.debug(f"Find word (not add) {q}")
         return self.__make_word(q, res)
 
+    def find_word_by_index(self, index) -> Optional[word.Word]:
+        res = self.search(columns=["DISTINCT word"],
+                          table="Word", order_by=[("Word", "ASC")],
+                          offset=index, limit=1)
+        if res is None or len(res) <= 0:
+            return None
+        return self.find_word(res[0][0], False, False)
+
     class UpdateResponse:
         def __init__(self):
             self._success = 0
