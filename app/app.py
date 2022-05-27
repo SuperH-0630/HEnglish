@@ -26,7 +26,7 @@ class HEnglishFlask(Flask):
                 log_file_name = os.path.join(configure.conf["LOG_HOME"], f"flask-{os.getpid()}.log")
             else:
                 log_file_name = os.path.join(configure.conf["LOG_HOME"], "flask.log")
-            handle = logging.handlers.TimedRotatingFileHandler(log_file_name)
+            handle = logging.handlers.TimedRotatingFileHandler(log_file_name, backupCount=10)
             handle.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(asctime)s "
                                                   "(%(filename)s:%(lineno)d %(funcName)s) "
                                                   "%(process)d %(thread)d "
