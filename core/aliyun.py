@@ -18,7 +18,7 @@ class AliyunTls:
         def __init__(self, url: str, key: str, secret: str, app: str, res: "Result", **kwargs):
             self.__res = res
             self.__kwargs = kwargs
-            self.__th = threading.Thread(target=self.__test_run)
+            self.__th = threading.Thread(target=self.__run)
             self.url = url
             self.key = key
             self.secret = secret
@@ -35,19 +35,19 @@ class AliyunTls:
         def on_error(self, message, *args):
             self.__res.success = False
 
-        def data_to_base64(self, data, *_):
+        def on_data(self, data, *_):
             try:
                 self.__res.byte += data
             except Exception:
                 self.__res.success = False
 
-        def __test_run(self):
+        def __run(self):
             tts = nls.NlsSpeechSynthesizer(
                 url=self.url,
                 akid=self.key,
                 aksecret=self.secret,
                 appkey=self.app,
-                on_data=self.data_to_base64,
+                on_data=self.on_data,
                 on_error=self.on_error,
             )
 
@@ -64,6 +64,7 @@ class AliyunTls:
         }
 
     def start(self, text: str):
+        """ 会阻塞程序进行 """
         return AliyunTls.Tls(self.url, self.key, self.secret, self.app, Result(text), **self.kwargs).start()
 
 

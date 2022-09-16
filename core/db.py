@@ -24,49 +24,8 @@ class DataBase:
     def delete_self(self):
         os.remove(self._db_name)
 
-    def search(self, columns: List[str], table: str,
-               where: Union[str, List[str]] = None,
-               limit: Optional[int] = None,
-               offset: Optional[int] = None,
-               order_by: Optional[List[Tuple[str, str]]] = None,
-               group_by: Optional[List[str]] = None,
-               for_update: bool = False):
-        if type(where) is list and len(where) > 0:
-            where: str = " WHERE " + " AND ".join(f"({w})" for w in where)
-        elif type(where) is str and len(where) > 0:
-            where = " WHERE " + where
-        else:
-            where: str = ""
-
-        if order_by is None:
-            order_by: str = ""
-        else:
-            by = [f" {i[0]} {i[1]} " for i in order_by]
-            order_by: str = " ORDER BY" + ", ".join(by)
-
-        if limit is None or limit == 0:
-            limit: str = ""
-        else:
-            limit = f" LIMIT {limit}"
-
-        if offset is None:
-            offset: str = ""
-        else:
-            offset = f" OFFSET {offset}"
-
-        if group_by is None:
-            group_by: str = ""
-        else:
-            group_by = "GROUP BY " + ", ".join(group_by)
-
-        columns: str = ", ".join(columns)
-        if for_update:
-            for_update = "FOR UPDATE"
-        else:
-            for_update = ""
-        return self.__search(f"SELECT {columns} "
-                             f"FROM {table} "
-                             f"{where} {group_by} {order_by} {limit} {offset} {for_update};")
+    def search(self, sql: str, *args) -> Union[None, List]:
+        return self.__search(sql, args)
 
     def insert(self, table: str, columns: list, values: Union[str, List[str]], not_commit: bool = False):
         columns: str = ", ".join(columns)
@@ -98,11 +57,11 @@ class DataBase:
         kw_str = ", ".join(kw_list)
         return self.done(f"UPDATE {table} SET {kw_str} WHERE {where};", not_commit=not_commit)
 
-    def __search(self, sql) -> Union[None, List]:
+    def __search(self, sql, args) -> Union[None, List]:
         try:
             sqlite = sqlite3.connect(self._db_name)
             cur = sqlite.cursor()
-            cur.execute(sql)
+            cur.execute(sql, args)
             ret = cur.fetchall()
         except sqlite3.Error:
             self.__logger.error(f"Sqlite({self._db_name}) SQL {sql} error", exc_info=True)
@@ -144,7 +103,19 @@ class WordDatabase(DataBase):
         )''')
         self.wd = word.WordDict()
 
+        http_header = configure.conf.get("HEADER")
+        if http_header:
+            self.wd.set_headers(http_header)
+
+        http_proxy = configure.conf.get("PROXY")
+        if http_header:
+            self.wd.set_proxies(http_proxy)
+
     def __add_word(self, q: str, add: bool):
+        """
+        访问词典, 添加一个新单词
+        :param add: 表示是否添加到数据库
+        """
         r = self.wd.get_requests(q)
         if not r.is_find:
             return None
@@ -155,16 +126,16 @@ class WordDatabase(DataBase):
                 ret = w
             name = w.name
             mp3 = w.mp3
-            name_lower = name.lower().replace("'", "''")
-            res = self.search(columns=["word"], table="Word", where=f"LOWER(word)='{name_lower}'")
+            name_lower = name.lower()
+            res = self.search("SELECT word FROM Word WHERE LOWER(word)=?", name_lower)
             if res is not None and len(res) > 0:
                 continue
             for c in w.comment:
                 comment = r.res[i].comment[c]
-                eg = '@@'.join(comment.eg).replace("'", "''")
-                part = comment.part.replace("'", "''")
-                english = comment.english.replace("'", "''")
-                chinese = comment.chinese.replace("'", "''")
+                eg = '@@'.join(comment.eg)  # 例句之间使用@@分隔
+                part = comment.part
+                english = comment.english
+                chinese = comment.chinese
                 if add:
                     self.insert(table='Word',
                                 columns=['word', 'part', 'english', 'chinese', 'eg', 'mp3'],
@@ -174,6 +145,7 @@ class WordDatabase(DataBase):
 
     @staticmethod
     def __make_word(q: str, res: list):
+        """ 将 find_word 获取的SQL数据转换为word对象 """
         w = word.Word(q, res[0][7])
         box = 6
         for i in res:
@@ -186,10 +158,17 @@ class WordDatabase(DataBase):
         return w
 
     def find_word(self, q: str, search: bool = True, add: bool = True) -> Optional[word.Word]:
-        name_lower = q.lower().replace("'", "''")
-        res = self.search(columns=["id", "word", "part", "english", "chinese", "eg", "box", "mp3"],
-                          table="Word",
-                          where=f"LOWER(word)='{name_lower}'")
+        """
+        数据库中找单词
+        :param q: 单词
+        :param search: 是否在字典查找
+        :param add: 是否查找后添加到数据库
+        :return: 单词
+        """
+        name_lower = q.lower()
+        res = self.search("SELECT id, word, part, english, chinese, eg, box, mp3 "
+                          "FROM Word "
+                          "WHERE LOWER(word)=?", name_lower)
         if res is None or len(res) <= 0:
             if search:
                 return self.__add_word(q, add)
@@ -198,14 +177,16 @@ class WordDatabase(DataBase):
         return self.__make_word(q, res)
 
     def find_word_by_index(self, index) -> Optional[word.Word]:
-        res = self.search(columns=["DISTINCT word"],
-                          table="Word", order_by=[("Word", "ASC")],
-                          offset=index, limit=1)
+        res = self.search("SELECT DISTINCT word "
+                          "FROM Word "
+                          "ORDER BY word "
+                          "LIMIT 1 OFFSET ?", index)
         if res is None or len(res) <= 0:
             return None
         return self.find_word(res[0][0], False, False)
 
     class UpdateResponse:
+        """ 记录单词导入(更新)的个数, 和失败的单词 """
         def __init__(self):
             self._success = 0
             self._error = 0
@@ -222,8 +203,9 @@ class WordDatabase(DataBase):
             return self._success, self._error, self._error_list
 
     def import_txt(self, line: str, sleep: int = 1):
+        """ 在字符串中导入单词 """
         response = self.UpdateResponse()
-        word_list = self.word_pattern.findall(line)
+        word_list = self.word_pattern.findall(line)  # 匹配line中的所有英语单词
         for w in word_list:
             time.sleep(sleep)
             try:
@@ -240,6 +222,7 @@ class WordDatabase(DataBase):
 
     @staticmethod
     def eg_to_str(eg_filed: str, max_eg: int, html: bool = False):
+        """ 例句转换成HTML格式或人类可读格式 """
         eg = eg_filed.split("@@")
         eg_str = ""
         count_eg = 0
@@ -263,9 +246,10 @@ class WordDatabase(DataBase):
         return eg_str
 
     def export_frame(self, max_eg: int = 3, html: bool = False) -> Optional[pandas.DataFrame]:
-        res = self.search(columns=["box", "word", "part", "english", "chinese", "eg"],
-                          table="Word",
-                          order_by=[("word", "ASC"), ("box", "ASC")])
+        """ 导出数据库 Pandas DataFrame """
+        res = self.search("SELECT box, word, part, english, chinese, eg "
+                          "FROM Word "
+                          "ORDER BY word, box")
         if res is None:
             return None
 
@@ -296,7 +280,7 @@ class WordDatabase(DataBase):
         count = 0
         word_list = self.word_pattern.findall(line)
         for w in word_list:
-            name_lower = w.lower().replace("'", "''")
+            name_lower = w.lower()
             cur = self.delete(table="Word", where=f"LOWER(word)='{name_lower}'")
             if cur[1].rowcount != -1:
                 self.__logger.debug(f"delete word {w} success")
@@ -311,14 +295,14 @@ class WordDatabase(DataBase):
         return cur[1].rowcount
 
     def right_word(self, w: str):
-        name_lower = w.lower().replace("'", "''")
-        res = self.search(columns=["MIN(box)"], table="Word", where=f"LOWER(word)='{name_lower}'")
+        name_lower = w.lower()
+        res = self.search("SELECT MIN(box) FROM Word WHERE LOWER(word)=?", name_lower)
         if len(res) == 0:
             return False
         box = res[0][0]
         if box != 5:
             box += 1
-            name_lower = w.lower().replace("'", "''")
+            name_lower = w.lower()
             self.update(table="Word", kw={"box": f"{box}"}, where=f"LOWER(word)='{name_lower}'")
         return True
 
@@ -341,13 +325,18 @@ class WordDatabase(DataBase):
             box = 4  # 1
         # box 的概率比分别为：5:4:3:2:1
 
-        count = 0
+        first_box = box
+        count = self.search("SELECT COUNT(DISTINCT word) FROM Word WHERE box=?", box)[0][0]
         while count == 0:
-            if box == 5:
-                return None
-            box += 1
-            count = self.search(columns=["COUNT(DISTINCT word)"], table="Word", where=f"box<={box}")[0][0]
-        get = self.search(columns=["DISTINCT word"], table="Word", where=f"box<={box}",
-                          limit=1, offset=random.randint(0, count - 1))[0][0]
+            if box == 4:
+                box = 0
+            else:
+                box += 1
+
+            if box == first_box:
+                break
+            count = self.search("SELECT COUNT(DISTINCT word) FROM Word WHERE box=?", box)[0][0]
+        get = self.search("SELECT DISTINCT word FROM Word WHERE box=? LIMIT 1 OFFSET ?",
+                          box, random.randint(0, count - 1))[0][0]
         self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
         return self.find_word(get, False)

@@ -288,7 +288,7 @@ def upload():
     file = request.files["file"]
     user = current_user._get_current_object()
     job: Upload = Upload.upload.get(user.user)
-    if Upload.upload.get(user.user) is not None and job.is_alive():
+    if job is not None and job.is_alive():
         flash("Please wait for the current task to complete")
         return abort(423)
     Upload(user, file.stream.read().decode('utf-8').split('\n')).start()

@@ -23,11 +23,8 @@ class WordDict:
             user_agent = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) "
                           "Chrome/17.0.963.56 Safari/535.11 ")
 
-        if proxies is None:
-            proxies = {'http': "http://localhost:8889", 'https': "http://localhost:8889"}  # 不走系统代理
-
         self.headers = {"User-Agent": user_agent}  # 配置请求头
-        self.proxies = proxies
+        self.proxies = {}
 
     def set_headers(self, headers: dict):
         self.headers.update(headers)
@@ -140,7 +137,7 @@ class Word:
 
         def add_eg(self, eg: str):
             eg = eg.strip()
-            if eg == "##" or len(eg) == 0:
+            if eg == "##" or len(eg) == 0:  # 中英文使用##拼接
                 return
             self.eg.append(eg)
 

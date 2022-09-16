@@ -14,8 +14,8 @@ class AnonymousUser(AnonymousUserMixin):
 
 class UserWordDataBase(WordDatabase, UserMixin):
     def __check(self, key: int, value: str):
-        if len(self.search(table="User", columns=["value"], where=f"key={key}")) == 0:
-            self.insert(table="User", columns=["key", "value"], values=f"{key}, '{value}'")  # 默认密码
+        if len(self.search("SELECT value FROM User WHERE key=?", key)) == 0:
+            self.insert(table="User", columns=["key", "value"], values=f"{key}, '{value}'")
 
     def __init__(self, user: str, path: str):
         super().__init__(user, path)
@@ -26,24 +26,24 @@ class UserWordDataBase(WordDatabase, UserMixin):
                     value TEXT NOT NULL  -- 密码hash
                 )''')
 
-        self.__check(1, generate_password_hash('88888888'))
+        self.__check(1, generate_password_hash('88888888'))  # 默认密码
         self.__check(2, time.strftime('%Y#%m#%d', time.localtime(time.time())))  # 更新时间
         self.__check(3, '0')  # right
         self.__check(4, '0')  # wrong
-        self.__check(5, '')  # wrong
+        self.__check(5, '')  # 最近列表
 
-        self.check_time()
+        self.check_time()  # 更新最后登录时间
         self.user = user
 
     def get_id(self):
         return self.user
 
     def set_value(self, key: int, value):
-        value = str(value).replace("'", "''")
+        value = str(value)
         self.update(table="User", kw={"value": f"'{value}'"}, where=f"key={key}")
 
     def get_value(self, key: int, default=None) -> Optional[str]:
-        res = self.search(table="User", columns=["value"], where=f"key={key}")
+        res = self.search("SELECT value FROM User WHERE key=?", key)
         if len(res) == 0:
             return default
         return res[0][0]
@@ -58,8 +58,9 @@ class UserWordDataBase(WordDatabase, UserMixin):
         self.set_value(1, generate_password_hash(passwd))
 
     def check_time(self):
+        """ 更新时间数据, 按日计 """
         now_time = time.strftime('%Y#%m#%d', time.localtime(time.time()))
-        if self.get_value(2) != now_time:
+        if self.get_value(2) != now_time:  # 最后更新日期(精确到日)与当前不同，则重置数据
             self.set_value(2, now_time)
             self.set_value(3, 0)
             self.set_value(4, 0)
@@ -93,7 +94,7 @@ class UserWordDataBase(WordDatabase, UserMixin):
         self.delete_self()
 
     def get_box_count(self) -> Tuple[list, list, int, int]:
-        res = self.search(columns=["COUNT(word)", "COUNT(DISTINCT word)", "box"], table="Word", group_by=["box"])
+        res = self.search("SELECT COUNT(word), COUNT(DISTINCT word), box FROM Word GROUP BY box")
         ret = [0, 0, 0, 0, 0]
         ret_distinct = [0, 0, 0, 0, 0]
         for i in res:
@@ -157,6 +158,7 @@ def have_user(name: str):
 
 
 def load_user(name: str, passwd: Optional[str]):
+    """ 加载一个用户，如果密码为None表示不检查密码"""
     if not os.path.exists(os.path.join(conf["DB_PATH"], f"{name}.db")):
         return None
     user = UserWordDataBase(name, conf["DB_PATH"])

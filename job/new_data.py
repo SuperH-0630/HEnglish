@@ -1,3 +1,6 @@
+""" 旧版数据库导入为新版数据库 """
+""" 新版加入了mp3 """
+
 import sqlite3
 from core.aliyun import tls
 import traceback

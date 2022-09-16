@@ -25,7 +25,7 @@ def form_required(form: ClassVar[FlaskForm], callback: Optional[Callable] = None
                 if callback is None:
                     return abort(404)
                 return callback(form=f, **kw, **kwargs)
-            g.form = f
+            g.form = f  # 使用g传递form参数
             return func(*args, **kwargs)
         return new_func
     return required

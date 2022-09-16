@@ -13,7 +13,7 @@ conf = {
     "LOG_STDERR": True,
     "LOG_LEVEL": "DEBUG",
     "SERVER_NAME": None,
-    "MAX_CONTENT_LENGTH": 5 * 1024 * 1024,
+    "MAX_CONTENT_LENGTH": 5 * 1024 * 1024,  # Flask 文件上传最大大小
     "LOG_FILE_NAME_PID": False,
     "INVITE_URL": "12345678",
     "ALIYUN_KEY": "",

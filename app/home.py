@@ -90,7 +90,6 @@ def register():
         return redirect(url_for("home.index"))
 
     current_app.new_invite_passwd()
-    print(register_form.template.data)
     flat, user = create_user(register_form.template.data, register_form.name.data, register_form.passwd.data)
     if user is not None:
         current_app.logger.debug(f"{register_form.name.data} with {register_form.template.data} register success")
