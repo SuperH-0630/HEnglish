@@ -53,7 +53,7 @@
     {# footer 最后加载 #}
     <footer id="foot" class="pb-3 text-center">
         <hr>
-        {{ footer }}
+        {{ footer | safe }}
     </footer>
     <script>
         function SetFooter (mutationsList, observer) {
