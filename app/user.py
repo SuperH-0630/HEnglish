@@ -14,13 +14,13 @@ class AnonymousUser(AnonymousUserMixin):
 
 class UserWordDataBase(WordDatabase, UserMixin):
     def __check(self, key: int, value: str):
-        if len(self.search("SELECT value FROM User WHERE key=?", key)) == 0:
-            self.insert(table="User", columns=["key", "value"], values=f"{key}, '{value}'")
+        if len(self.search("SELECT value FROM main.User WHERE key=?", key)) == 0:
+            self.insert("INSERT INTO main.User(key, value) VALUES (?, ?)", key, value)
 
     def __init__(self, user: str, path: str):
         super().__init__(user, path)
         self.done(f'''
-                CREATE TABLE IF NOT EXISTS User (
+                CREATE TABLE IF NOT EXISTS main.User (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 记录ID
                     key INTEGER UNIQUE NOT NULL,
                     value TEXT NOT NULL  -- 密码hash
@@ -40,10 +40,10 @@ class UserWordDataBase(WordDatabase, UserMixin):
 
     def set_value(self, key: int, value):
         value = str(value)
-        self.update(table="User", kw={"value": f"'{value}'"}, where=f"key={key}")
+        self.update("UPDATE main.User SET value=? WHERE key=?", value, key)
 
     def get_value(self, key: int, default=None) -> Optional[str]:
-        res = self.search("SELECT value FROM User WHERE key=?", key)
+        res = self.search("SELECT value FROM main.User WHERE key=?", key)
         if len(res) == 0:
             return default
         return res[0][0]
@@ -94,7 +94,7 @@ class UserWordDataBase(WordDatabase, UserMixin):
         self.delete_self()
 
     def get_box_count(self) -> Tuple[list, list, int, int]:
-        res = self.search("SELECT COUNT(word), COUNT(DISTINCT word), box FROM Word GROUP BY box")
+        res = self.search("SELECT COUNT(word), COUNT(DISTINCT word), box FROM main.Word GROUP BY box")
         ret = [0, 0, 0, 0, 0]
         ret_distinct = [0, 0, 0, 0, 0]
         for i in res:
@@ -114,7 +114,7 @@ class UserWordDataBase(WordDatabase, UserMixin):
         return right, wrong, history
 
     def reset(self):
-        self.update(table="Word", kw={"box": "1"}, where="1")
+        self.update("UPDATE main.Word SET box=1 WHERE true")
 
 
 def check_base_db():

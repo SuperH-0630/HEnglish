@@ -41,10 +41,10 @@ def show_all_word():
         return abort(400)
     if page < 1:
         abort(400)
-    res = user.search("SELECT word, box, part, english, chinese, eg FROM Word "
+    res = user.search("SELECT word, box, part, english, chinese, eg FROM main.Word "
                       "ORDER BY word, box "
                       "LIMIT 20 OFFSET ?", (page - 1) * 20)
-    word_count = user.search("SELECT COUNT(id) FROM Word")[0][0]
+    word_count = user.search("SELECT COUNT(id) FROM main.Word")[0][0]
     page_count = word_count // 20
     if word_count % 20 > 0:
         page_count += 1
@@ -66,9 +66,9 @@ def show_box_word(box: int):
         return abort(400)
     if page < 1:
         abort(400)
-    res = user.search("SELECT word, box, part, english, chinese, eg FROM Word WHERE box=? "
+    res = user.search("SELECT word, box, part, english, chinese, eg FROM main.Word WHERE box=? "
                       "ORDER BY word, box LIMIT 20 OFFSET ?", box, (page - 1) * 20)
-    word_count = user.search("SELECT COUNT(id) FROM Word WHERE box=?", box)[0][0]
+    word_count = user.search("SELECT COUNT(id) FROM main.Word WHERE box=?", box)[0][0]
     page_count = word_count // 20
     if word_count % 20 > 0:
         page_count += 1

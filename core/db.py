@@ -27,35 +27,14 @@ class DataBase:
     def search(self, sql: str, *args) -> Union[None, List]:
         return self.__search(sql, args)
 
-    def insert(self, table: str, columns: list, values: Union[str, List[str]], not_commit: bool = False):
-        columns: str = ", ".join(columns)
-        if type(values) is str:
-            values: str = f"({values})"
-        else:
-            values: str = ", ".join(f"{v}" for v in values)
-        return self.done(f"INSERT INTO {table}({columns}) VALUES {values};", not_commit=not_commit)
+    def insert(self, sql: str, *args, not_commit: bool = False) -> Union[None, "Tuple[sqlite3, sqlite3.Cursor]"]:
+        return self.done(sql, args, not_commit=not_commit)
 
-    def delete(self, table: str, where: Union[str, List[str]] = None, not_commit: bool = False):
-        if type(where) is list and len(where) > 0:
-            where: str = " AND ".join(f"({w})" for w in where)
-        elif type(where) is not str or len(where) == 0:  # 必须指定条件
-            return None
+    def delete(self, sql: str, *args, not_commit: bool = False) -> Union[None, "Tuple[sqlite3, sqlite3.Cursor]"]:
+        return self.done(sql, args, not_commit=not_commit)
 
-        return self.done(f"DELETE FROM {table} WHERE {where};", not_commit=not_commit)
-
-    def update(self, table: str, kw: "Dict[str:str]", where: Union[str, List[str]] = None,
-               not_commit: bool = False):
-        if len(kw) == 0:
-            return None
-
-        if type(where) is list and len(where) > 0:
-            where: str = " AND ".join(f"({w})" for w in where)
-        elif type(where) is not str or len(where) == 0:  # 必须指定条件
-            return None
-
-        kw_list = [f"{key} = {kw[key]}" for key in kw]
-        kw_str = ", ".join(kw_list)
-        return self.done(f"UPDATE {table} SET {kw_str} WHERE {where};", not_commit=not_commit)
+    def update(self, sql: str, *args, not_commit: bool = False) -> Union[None, "Tuple[sqlite3, sqlite3.Cursor]"]:
+        return self.done(sql, args, not_commit=not_commit)
 
     def __search(self, sql, args) -> Union[None, List]:
         try:
@@ -68,11 +47,11 @@ class DataBase:
             return None
         return ret
 
-    def done(self, sql, not_commit: bool = False) -> Union[None, "Tuple[sqlite3, sqlite3.Cursor]"]:
+    def done(self, sql, args=(), not_commit: bool = False) -> Union[None, "Tuple[sqlite3, sqlite3.Cursor]"]:
         sqlite = sqlite3.connect(self._db_name)
         try:
             cur = sqlite.cursor()
-            cur.execute(sql)
+            cur.execute(sql, args)
         except sqlite3.Error:
             sqlite.rollback()
             self.__logger.error(f"Sqlite({self._db_name}) SQL {sql} error", exc_info=True)
@@ -91,7 +70,7 @@ class WordDatabase(DataBase):
         super(WordDatabase, self).__init__(dict_name, path)
         self.dict_name = dict_name
         self.done(f'''
-        CREATE TABLE IF NOT EXISTS Word (
+        CREATE TABLE IF NOT EXISTS main.Word (
             id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 编码
             box INTEGER NOT NULL DEFAULT 1 CHECK (box < 6 and box > 0),
             word TEXT NOT NULL,  -- 单词
@@ -127,7 +106,7 @@ class WordDatabase(DataBase):
             name = w.name
             mp3 = w.mp3
             name_lower = name.lower()
-            res = self.search("SELECT word FROM Word WHERE LOWER(word)=?", name_lower)
+            res = self.search("SELECT word FROM main.Word WHERE LOWER(word)=?", name_lower)
             if res is not None and len(res) > 0:
                 continue
             for c in w.comment:
@@ -137,9 +116,9 @@ class WordDatabase(DataBase):
                 english = comment.english
                 chinese = comment.chinese
                 if add:
-                    self.insert(table='Word',
-                                columns=['word', 'part', 'english', 'chinese', 'eg', 'mp3'],
-                                values=f"'{name_lower}', '{part}', '{english}', '{chinese}', '{eg}', '{mp3}'")
+                    self.insert("INSERT INTO main.Word(word, part, english, chinese, eg, mp3) "
+                                "VALUES (?, ?, ?, ?, ?, ?)",
+                                name_lower, part, english, chinese, eg, mp3)
                 self.__logger.info(f"Add word name: {name_lower} part: {part}")
         return ret
 
@@ -167,7 +146,7 @@ class WordDatabase(DataBase):
         """
         name_lower = q.lower()
         res = self.search("SELECT id, word, part, english, chinese, eg, box, mp3 "
-                          "FROM Word "
+                          "FROM main.Word "
                           "WHERE LOWER(word)=?", name_lower)
         if res is None or len(res) <= 0:
             if search:
@@ -178,7 +157,7 @@ class WordDatabase(DataBase):
 
     def find_word_by_index(self, index) -> Optional[word.Word]:
         res = self.search("SELECT DISTINCT word "
-                          "FROM Word "
+                          "FROM main.Word "
                           "ORDER BY word "
                           "LIMIT 1 OFFSET ?", index)
         if res is None or len(res) <= 0:
@@ -248,7 +227,7 @@ class WordDatabase(DataBase):
     def export_frame(self, max_eg: int = 3, html: bool = False) -> Optional[pandas.DataFrame]:
         """ 导出数据库 Pandas DataFrame """
         res = self.search("SELECT box, word, part, english, chinese, eg "
-                          "FROM Word "
+                          "FROM main.Word "
                           "ORDER BY word, box")
         if res is None:
             return None
@@ -281,7 +260,7 @@ class WordDatabase(DataBase):
         word_list = self.word_pattern.findall(line)
         for w in word_list:
             name_lower = w.lower()
-            cur = self.delete(table="Word", where=f"LOWER(word)='{name_lower}'")
+            cur = self.delete("DELETE FROM main.Word WHERE LOWER(word)-?", name_lower)
             if cur[1].rowcount != -1:
                 self.__logger.debug(f"delete word {w} success")
                 count += 1
@@ -291,24 +270,24 @@ class WordDatabase(DataBase):
 
     def delete_all(self):
         self.__logger.debug(f"delete all word")
-        cur = self.delete(table="Word")
+        cur = self.delete("DELETE FROM main.Word WHERE true")
         return cur[1].rowcount
 
     def right_word(self, w: str):
         name_lower = w.lower()
-        res = self.search("SELECT MIN(box) FROM Word WHERE LOWER(word)=?", name_lower)
+        res = self.search("SELECT MIN(box) FROM main.Word WHERE LOWER(word)=?", name_lower)
         if len(res) == 0:
             return False
         box = res[0][0]
         if box != 5:
             box += 1
             name_lower = w.lower()
-            self.update(table="Word", kw={"box": f"{box}"}, where=f"LOWER(word)='{name_lower}'")
+            self.update("UPDATE main.Word SET box=? WHERE LOWER(word)=?", box, name_lower)
         return True
 
     def wrong_word(self, w: str):
         name_lower = w.lower().replace('\'', '\'\'')
-        self.update(table="Word", kw={"box": "1"}, where=f"LOWER(word)='{name_lower}'")
+        self.update("UPDATE main.Word SET box=1 WHERE LOWER(word)=?", name_lower)
         return True
 
     def rand_word(self):
@@ -326,7 +305,7 @@ class WordDatabase(DataBase):
         # box 的概率比分别为：5:4:3:2:1
 
         first_box = box
-        count = self.search("SELECT COUNT(DISTINCT word) FROM Word WHERE box=?", box)[0][0]
+        count = self.search("SELECT COUNT(DISTINCT word) FROM main.Word WHERE box=?", box)[0][0]
         while count == 0:
             if box == 4:
                 box = 0
@@ -335,8 +314,8 @@ class WordDatabase(DataBase):
 
             if box == first_box:
                 break
-            count = self.search("SELECT COUNT(DISTINCT word) FROM Word WHERE box=?", box)[0][0]
-        get = self.search("SELECT DISTINCT word FROM Word WHERE box=? LIMIT 1 OFFSET ?",
+            count = self.search("SELECT COUNT(DISTINCT word) FROM main.Word WHERE box=?", box)[0][0]
+        get = self.search("SELECT DISTINCT word FROM main.Word WHERE box=? LIMIT 1 OFFSET ?",
                           box, random.randint(0, count - 1))[0][0]
         self.__logger.debug(f"Rand word {self.dict_name} from box: {box} count: {count} get: {get}")
         return self.find_word(get, False)
