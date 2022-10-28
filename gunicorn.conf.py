@@ -4,6 +4,12 @@ import multiprocessing
 import logging.handlers
 import logging
 
+try:
+    import gevent.monkey
+    gevent.monkey.patch_all()
+except ImportError:
+    pass
+
 bind = '127.0.0.1:5001'
 timeout = 30  # 超时
 
